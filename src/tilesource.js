@@ -775,6 +775,16 @@ $.TileSource.prototype = {
             finish("Image load aborted.");
         };
 
+        var b64toBlob = function(dataURI) {
+            const byteString = atob(dataURI.split(',')[1]);
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], { type: 'image/jpeg' });
+        };
+
         // Load the tile with an AJAX request if the loadWithAjax option is
         // set. Otherwise load the image by setting the source proprety of the image object.
         if (context.loadWithAjax) {
@@ -782,7 +792,7 @@ $.TileSource.prototype = {
                 url: context.src,
                 withCredentials: context.ajaxWithCredentials,
                 headers: context.ajaxHeaders,
-                responseType: "arraybuffer",
+                responseType: "json",
                 postData: context.postData,
                 success: function(request) {
                     var blb;
@@ -790,7 +800,7 @@ $.TileSource.prototype = {
                     // BlobBuilder fallback adapted from
                     // http://stackoverflow.com/questions/15293694/blob-constructor-browser-compatibility
                     try {
-                        blb = new window.Blob([request.response]);
+                        blb = b64toBlob(request.response.url);
                     } catch (e) {
                         var BlobBuilder = (
                             window.BlobBuilder ||
@@ -807,14 +817,15 @@ $.TileSource.prototype = {
                     // If the blob is empty for some reason consider the image load a failure.
                     if (blb.size === 0) {
                         finish("Empty image response.");
-                    } else {
-                        // Create a URL for the blob data and make it the source of the image object.
-                        // This will still trigger Image.onload to indicate a successful tile load.
-                        image.src = (window.URL || window.webkitURL).createObjectURL(blb);
+                        self.finish(false);
                     }
+                    // Create a URL for the blob data and make it the source of the image object.
+                    // This will still trigger Image.onload to indicate a successful tile load.
+                    image.src = (window.URL || window.webkitURL).createObjectURL(blb);
                 },
                 error: function(request) {
                     finish("Image load aborted - XHR error");
+                    self.finish(false);
                 }
             });
         } else {
