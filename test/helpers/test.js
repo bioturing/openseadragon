@@ -1,4 +1,4 @@
-/* global $, QUnit, Util */
+/* global $, Util */
 
 (function () {
 
@@ -37,7 +37,7 @@
             };
 
             $canvas
-                .simulate( 'mouseenter', event )
+                .simulate( OpenSeadragon.MouseTracker.haveMouseEnter ? 'mouseenter' : 'mouseover', event )
                 .simulate( 'mousedown', event );
             for ( var i = 0; i < args.dragCount; i++ ) {
                 event.clientX += args.dragDx;
@@ -47,7 +47,7 @@
             }
             $canvas
                 .simulate( 'mouseup', event )
-                .simulate( 'mouseleave', event );
+                .simulate( OpenSeadragon.MouseTracker.haveMouseEnter ? 'mouseleave' : 'mouseout', event );
         },
 
         // ----------
@@ -146,14 +146,8 @@
             obj0[member0]();
             assert.equal(called, true, 'called through for ' + member0);
             assert.equal(errored, true, 'errored for ' + member0);
-        },
+        }
     };
-
-    // Log the name of the currently running test when it starts. Uses console.log rather than
-    // $.console.log so that the message is printed even after the $.console is diverted (see below).
-    QUnit.testStart((details) => {
-        console.log(`Starting test ${details.module}.${details.name}`);
-    });
 
     /*
     Test console log capture

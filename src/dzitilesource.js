@@ -2,7 +2,7 @@
  * OpenSeadragon - DziTileSource
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -108,7 +108,7 @@ $.extend( $.DziTileSource.prototype, $.TileSource.prototype, /** @lends OpenSead
         if ( data.Image ) {
             ns = data.Image.xmlns;
         } else if ( data.documentElement) {
-            if ("Image" === data.documentElement.localName || "Image" === data.documentElement.tagName) {
+            if ("Image" == data.documentElement.localName || "Image" == data.documentElement.tagName) {
                 ns = data.documentElement.namespaceURI;
             }
         }
@@ -124,11 +124,10 @@ $.extend( $.DziTileSource.prototype, $.TileSource.prototype, /** @lends OpenSead
      * @function
      * @param {Object|XMLDocument} data - the raw configuration
      * @param {String} url - the url the data was retrieved from if any.
-     * @param {String} postData - HTTP POST data in k=v&k2=v2... form or null
-     * @returns {Object} options - A dictionary of keyword arguments sufficient
+     * @return {Object} options - A dictionary of keyword arguments sufficient
      *      to configure this tile sources constructor.
      */
-    configure: function( data, url, postData ){
+    configure: function( data, url ){
 
         var options;
 
@@ -143,9 +142,9 @@ $.extend( $.DziTileSource.prototype, $.TileSource.prototype, /** @lends OpenSead
 
         if (url && !options.tilesUrl) {
             options.tilesUrl = url.replace(
-                    /([^/]+?)(\.(dzi|xml|js)?(\?[^/]*)?)?\/?$/, '$1_files/');
+                    /([^\/]+?)(\.(dzi|xml|js)?(\?[^\/]*)?)?\/?$/, '$1_files/');
 
-            if (url.search(/\.(dzi|xml|js)\?/) !== -1) {
+            if (url.search(/\.(dzi|xml|js)\?/) != -1) {
                 options.queryParams = url.match(/\?.*/);
             }else{
                 options.queryParams = '';
@@ -241,7 +240,7 @@ function configureFromXML( tileSource, xmlDoc ){
         sizeNode,
         i;
 
-    if ( rootName === "Image" ) {
+    if ( rootName == "Image" ) {
 
         try {
             sizeNode = root.getElementsByTagName("Size" )[ 0 ];
@@ -305,9 +304,9 @@ function configureFromXML( tileSource, xmlDoc ){
                 e :
                 new Error( $.getString("Errors.Dzi") );
         }
-    } else if ( rootName === "Collection" ) {
+    } else if ( rootName == "Collection" ) {
         throw new Error( $.getString( "Errors.Dzc" ) );
-    } else if ( rootName === "Error" ) {
+    } else if ( rootName == "Error" ) {
         var messageNode = root.getElementsByTagName("Message")[0];
         var message = messageNode.firstChild.nodeValue;
         throw new Error(message);

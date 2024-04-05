@@ -2,7 +2,7 @@
  * OpenSeadragon - ButtonGroup
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -88,7 +88,6 @@ $.ButtonGroup = function( options ) {
      * @memberof OpenSeadragon.ButtonGroup#
      */
     this.tracker = new $.MouseTracker({
-        userData:           'ButtonGroup.tracker',
         element:            this.element,
         clickTimeThreshold: this.clickTimeThreshold,
         clickDistThreshold: this.clickDistThreshold,
@@ -98,7 +97,7 @@ $.ButtonGroup = function( options ) {
                 _this.buttons[ i ].notifyGroupEnter();
             }
         },
-        leaveHandler: function ( event ) {
+        exitHandler: function ( event ) {
             var i;
             if ( !event.insideElementPressed ) {
                 for ( i = 0; i < _this.buttons.length; i++ ) {
@@ -111,17 +110,6 @@ $.ButtonGroup = function( options ) {
 
 /** @lends OpenSeadragon.ButtonGroup.prototype */
 $.ButtonGroup.prototype = {
-
-    /**
-     * Adds the given button to this button group.
-     *
-     * @function
-     * @param {OpenSeadragon.Button} button
-     */
-    addButton: function( button ){
-        this.buttons.push(button);
-        this.element.appendChild(button.element);
-    },
 
     /**
      * TODO: Figure out why this is used on the public API and if a more useful
@@ -139,18 +127,8 @@ $.ButtonGroup.prototype = {
      * @function
      * @private
      */
-    emulateLeave: function() {
-        this.tracker.leaveHandler( { eventSource: this.tracker } );
-    },
-
-    destroy: function() {
-        while (this.buttons.length) {
-            var button = this.buttons.pop();
-            this.element.removeChild(button.element);
-            button.destroy();
-        }
-        this.tracker.destroy();
-        this.element = null;
+    emulateExit: function() {
+        this.tracker.exitHandler( { eventSource: this.tracker } );
     }
 };
 

@@ -2,7 +2,7 @@
  * OpenSeadragon - Control
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -74,7 +74,6 @@ $.ControlAnchor = {
  * @param {Element} container - the element to control will be anchored too.
  */
 $.Control = function ( element, options, container ) {
-
     var parent = element.parentNode;
     if (typeof options === 'number')
     {
@@ -113,13 +112,13 @@ $.Control = function ( element, options, container ) {
      * @member {Element} wrapper
      * @memberof OpenSeadragon.Control#
      */
-    if ( this.anchor === $.ControlAnchor.ABSOLUTE ) {
+    if ( this.anchor == $.ControlAnchor.ABSOLUTE ) {
         this.wrapper    = $.makeNeutralElement( "div" );
         this.wrapper.style.position = "absolute";
-        this.wrapper.style.top = typeof (options.top) === "number" ? (options.top + 'px') : options.top;
-        this.wrapper.style.left  = typeof (options.left) === "number" ? (options.left + 'px') : options.left;
-        this.wrapper.style.height = typeof (options.height) === "number" ? (options.height + 'px') : options.height;
-        this.wrapper.style.width  = typeof (options.width) === "number" ? (options.width + 'px') : options.width;
+        this.wrapper.style.top = typeof (options.top) == "number" ? (options.top + 'px') : options.top;
+        this.wrapper.style.left  = typeof (options.left) == "number" ? (options.left + 'px') : options.left;
+        this.wrapper.style.height = typeof (options.height) == "number" ? (options.height + 'px') : options.height;
+        this.wrapper.style.width  = typeof (options.width) == "number" ? (options.width + 'px') : options.width;
         this.wrapper.style.margin = "0px";
         this.wrapper.style.padding = "0px";
 
@@ -131,7 +130,7 @@ $.Control = function ( element, options, container ) {
     } else {
         this.wrapper    = $.makeNeutralElement( "div" );
         this.wrapper.style.display = "inline-block";
-        if ( this.anchor === $.ControlAnchor.NONE ) {
+        if ( this.anchor == $.ControlAnchor.NONE ) {
             // IE6 fix
             this.wrapper.style.width = this.wrapper.style.height = "100%";
         }
@@ -139,8 +138,8 @@ $.Control = function ( element, options, container ) {
     this.wrapper.appendChild( this.element );
 
     if (options.attachToViewer ) {
-        if ( this.anchor === $.ControlAnchor.TOP_RIGHT ||
-             this.anchor === $.ControlAnchor.BOTTOM_RIGHT ) {
+        if ( this.anchor == $.ControlAnchor.TOP_RIGHT ||
+             this.anchor == $.ControlAnchor.BOTTOM_RIGHT ) {
             this.container.insertBefore(
                 this.wrapper,
                 this.container.firstChild
@@ -151,7 +150,6 @@ $.Control = function ( element, options, container ) {
     } else {
         parent.appendChild( this.wrapper );
     }
-
 };
 
 /** @lends OpenSeadragon.Control.prototype */
@@ -163,18 +161,16 @@ $.Control.prototype = {
      */
     destroy: function() {
         this.wrapper.removeChild( this.element );
-        if (this.anchor !== $.ControlAnchor.NONE) {
-            this.container.removeChild(this.wrapper);
-        }
+        this.container.removeChild( this.wrapper );
     },
 
     /**
      * Determines if the control is currently visible.
      * @function
-     * @returns {Boolean} true if currently visible, false otherwise.
+     * @return {Boolean} true if currently visible, false otherwise.
      */
     isVisible: function() {
-        return this.wrapper.style.display !== "none";
+        return this.wrapper.style.display != "none";
     },
 
     /**
@@ -184,7 +180,7 @@ $.Control.prototype = {
      */
     setVisible: function( visible ) {
         this.wrapper.style.display = visible ?
-            ( this.anchor === $.ControlAnchor.ABSOLUTE ? 'block' : 'inline-block' ) :
+            ( this.anchor == $.ControlAnchor.ABSOLUTE ? 'block' : 'inline-block' ) :
             "none";
     },
 
@@ -194,7 +190,7 @@ $.Control.prototype = {
      * @param {Number} opactiy - a value between 1 and 0 inclusively.
      */
     setOpacity: function( opacity ) {
-        if ( this.element[ $.SIGNAL ] && $.Browser.vendor === $.BROWSERS.IE ) {
+        if ( this.element[ $.SIGNAL ] && $.Browser.vendor == $.BROWSERS.IE ) {
             $.setElementOpacity( this.element, opacity, true );
         } else {
             $.setElementOpacity( this.wrapper, opacity, true );

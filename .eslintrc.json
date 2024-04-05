@@ -1,9 +1,9 @@
 {
     "root": true,
-    "plugins": ["compat"],
+    // "plugins": ["compat"],
     "extends": [
-        "eslint:recommended",
-        "plugin:compat/recommended"
+        "eslint:recommended"
+        // "plugin:compat/recommended"
     ],
     "env": {
         "es6": true,

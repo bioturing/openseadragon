@@ -2,7 +2,7 @@
  * OpenSeadragon
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -163,10 +163,6 @@
   *     The colors of grids in debug mode. Each tiled image's grid uses a consecutive color.
   *     If there are more tiled images than provided colors, the color vector is recycled.
   *
-  * @property {Boolean} [silenceMultiImageWarnings=false]
-  *     Silences warnings when calling viewport coordinate functions with multi-image.
-  *     Useful when you're overlaying multiple images on top of one another.
-  *
   * @property {Number} [blendTime=0]
   *     Specifies the duration of animation as higher or lower level tiles are
   *     replacing the existing tile.
@@ -190,16 +186,6 @@
   *     Zoom level to use when image is first opened or the home button is clicked.
   *     If 0, adjusts to fit viewer.
   *
-  * @property {String|DrawerImplementation|Array} [drawer = ['webgl', 'canvas', 'html']]
-  *     Which drawer to use. Valid strings are 'webgl', 'canvas', and 'html'. Valid drawer
-  *     implementations are constructors of classes that extend OpenSeadragon.DrawerBase.
-  *     An array of strings and/or constructors can be used to indicate the priority
-  *     of different implementations, which will be tried in order based on browser support.
-  *
-  * @property {Object} drawerOptions
-  *     Options to pass to the selected drawer implementation. For details
-  *     please see {@link OpenSeadragon.DrawerOptions}.
-  *
   * @property {Number} [opacity=1]
   *     Default proportional opacity of the tiled images (1=opaque, 0=hidden)
   *     Hidden images do not draw and only load when preloading is allowed.
@@ -209,30 +195,18 @@
   *
   * @property {String} [compositeOperation=null]
   *     Valid values are 'source-over', 'source-atop', 'source-in', 'source-out',
-  *     'destination-over', 'destination-atop', 'destination-in', 'destination-out',
-  *     'lighter', 'difference', 'copy', 'xor', etc.
-  *     For complete list of modes, please @see {@link https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation/ globalCompositeOperation}
+  *     'destination-over', 'destination-atop', 'destination-in',
+  *     'destination-out', 'lighter', 'copy' or 'xor'
   *
   * @property {Boolean} [imageSmoothingEnabled=true]
-  *     Image smoothing for canvas rendering (only if the canvas drawer is used). Note: Ignored
+  *     Image smoothing for canvas rendering (only if canvas is used). Note: Ignored
   *     by some (especially older) browsers which do not support this canvas property.
-  *     This property can be changed in {@link Viewer.DrawerBase.setImageSmoothingEnabled}.
+  *     This property can be changed in {@link Viewer.Drawer.setImageSmoothingEnabled}.
   *
   * @property {String|CanvasGradient|CanvasPattern|Function} [placeholderFillStyle=null]
   *     Draws a colored rectangle behind the tile if it is not loaded yet.
   *     You can pass a CSS color value like "#FF8800".
   *     When passing a function the tiledImage and canvas context are available as argument which is useful when you draw a gradient or pattern.
-  *
-  * @property {Object} [subPixelRoundingForTransparency=null]
-  *     Determines when subpixel rounding should be applied for tiles when rendering images that support transparency.
-  *     This property is a subpixel rounding enum values dictionary [{@link BROWSERS}] --> {@link SUBPIXEL_ROUNDING_OCCURRENCES}.
-  *     The key is a {@link BROWSERS} value, and the value is one of {@link SUBPIXEL_ROUNDING_OCCURRENCES},
-  *     indicating, for a given browser, when to apply subpixel rounding.
-  *     Key '*' is the fallback value for any browser not specified in the dictionary.
-  *     This property has a simple mode, and one can set it directly to
-  *     {@link SUBPIXEL_ROUNDING_OCCURRENCES.NEVER}, {@link SUBPIXEL_ROUNDING_OCCURRENCES.ONLY_AT_REST} or {@link SUBPIXEL_ROUNDING_OCCURRENCES.ALWAYS}
-  *     in order to apply this rule for all browser. The values {@link SUBPIXEL_ROUNDING_OCCURRENCES.ALWAYS} would be equivalent to { '*', SUBPIXEL_ROUNDING_OCCURRENCES.ALWAYS }.
-  *     The default is {@link SUBPIXEL_ROUNDING_OCCURRENCES.NEVER} for all browsers, for backward compatibility reason.
   *
   * @property {Number} [degrees=0]
   *     Initial rotation.
@@ -300,12 +274,6 @@
   * @property {Number} [rotationIncrement=90]
   *     The number of degrees to rotate right or left when the rotate buttons or keyboard shortcuts are activated.
   *
-  * @property {Number} [maxTilesPerFrame=1]
-  *     The number of tiles loaded per frame. As the frame rate of the client's machine is usually high (e.g., 50 fps),
-  *     one tile per frame should be a good choice. However, for large screens or lower frame rates, the number of
-  *     loaded tiles per frame can be adjusted here. Reasonable values might be 2 or 3 tiles per frame.
-  *     (Note that the actual frame rate is given by the client's browser and machine).
-  *
   * @property {Number} [pixelsPerWheelLine=40]
   *     For pixel-resolution scrolling devices, the number of pixels equal to one scroll line.
   *
@@ -348,17 +316,13 @@
   *
   * @property {Number} [animationTime=1.2]
   *     Specifies the animation duration per each {@link OpenSeadragon.Spring}
-  *     which occur when the image is dragged, zoomed or rotated.
+  *     which occur when the image is dragged or zoomed.
   *
   * @property {OpenSeadragon.GestureSettings} [gestureSettingsMouse]
   *     Settings for gestures generated by a mouse pointer device. (See {@link OpenSeadragon.GestureSettings})
-  * @property {Boolean} [gestureSettingsMouse.dragToPan=true] - Pan on drag gesture
   * @property {Boolean} [gestureSettingsMouse.scrollToZoom=true] - Zoom on scroll gesture
   * @property {Boolean} [gestureSettingsMouse.clickToZoom=true] - Zoom on click gesture
   * @property {Boolean} [gestureSettingsMouse.dblClickToZoom=false] - Zoom on double-click gesture. Note: If set to true
-  *     then clickToZoom should be set to false to prevent multiple zooms.
-  * @property {Boolean} [gestureSettingsMouse.dblClickDragToZoom=false] - Zoom on dragging through
-  * double-click gesture ( single click and next click to drag).  Note: If set to true
   *     then clickToZoom should be set to false to prevent multiple zooms.
   * @property {Boolean} [gestureSettingsMouse.pinchToZoom=false] - Zoom on pinch gesture
   * @property {Boolean} [gestureSettingsMouse.zoomToRefPoint=true] - If zoomToRefPoint is true, the zoom is centered at the pointer position. Otherwise,
@@ -370,15 +334,10 @@
   *
   * @property {OpenSeadragon.GestureSettings} [gestureSettingsTouch]
   *     Settings for gestures generated by a touch pointer device. (See {@link OpenSeadragon.GestureSettings})
-  * @property {Boolean} [gestureSettingsTouch.dragToPan=true] - Pan on drag gesture
   * @property {Boolean} [gestureSettingsTouch.scrollToZoom=false] - Zoom on scroll gesture
   * @property {Boolean} [gestureSettingsTouch.clickToZoom=false] - Zoom on click gesture
   * @property {Boolean} [gestureSettingsTouch.dblClickToZoom=true] - Zoom on double-click gesture. Note: If set to true
   *     then clickToZoom should be set to false to prevent multiple zooms.
-    * @property {Boolean} [gestureSettingsTouch.dblClickDragToZoom=true] - Zoom on dragging through
-  * double-click gesture ( single click and next click to drag).  Note: If set to true
-  *     then clickToZoom should be set to false to prevent multiple zooms.
-
   * @property {Boolean} [gestureSettingsTouch.pinchToZoom=true] - Zoom on pinch gesture
   * @property {Boolean} [gestureSettingsTouch.zoomToRefPoint=true] - If zoomToRefPoint is true, the zoom is centered at the pointer position. Otherwise,
   *     the zoom is centered at the canvas center.
@@ -389,7 +348,6 @@
   *
   * @property {OpenSeadragon.GestureSettings} [gestureSettingsPen]
   *     Settings for gestures generated by a pen pointer device. (See {@link OpenSeadragon.GestureSettings})
-  * @property {Boolean} [gestureSettingsPen.dragToPan=true] - Pan on drag gesture
   * @property {Boolean} [gestureSettingsPen.scrollToZoom=false] - Zoom on scroll gesture
   * @property {Boolean} [gestureSettingsPen.clickToZoom=true] - Zoom on click gesture
   * @property {Boolean} [gestureSettingsPen.dblClickToZoom=false] - Zoom on double-click gesture. Note: If set to true
@@ -404,13 +362,9 @@
   *
   * @property {OpenSeadragon.GestureSettings} [gestureSettingsUnknown]
   *     Settings for gestures generated by unknown pointer devices. (See {@link OpenSeadragon.GestureSettings})
-  * @property {Boolean} [gestureSettingsUnknown.dragToPan=true] - Pan on drag gesture
   * @property {Boolean} [gestureSettingsUnknown.scrollToZoom=true] - Zoom on scroll gesture
   * @property {Boolean} [gestureSettingsUnknown.clickToZoom=false] - Zoom on click gesture
   * @property {Boolean} [gestureSettingsUnknown.dblClickToZoom=true] - Zoom on double-click gesture. Note: If set to true
-  *     then clickToZoom should be set to false to prevent multiple zooms.
-  * @property {Boolean} [gestureSettingsUnknown.dblClickDragToZoom=false] - Zoom on dragging through
-  * double-click gesture ( single click and next click to drag).  Note: If set to true
   *     then clickToZoom should be set to false to prevent multiple zooms.
   * @property {Boolean} [gestureSettingsUnknown.pinchToZoom=true] - Zoom on pinch gesture
   * @property {Boolean} [gestureSettingsUnknown.zoomToRefPoint=true] - If zoomToRefPoint is true, the zoom is centered at the pointer position. Otherwise,
@@ -426,23 +380,11 @@
   * @property {Number} [zoomPerScroll=1.2]
   *     The "zoom distance" per mouse scroll or touch pinch. <em><strong>Note:</strong> Setting this to 1.0 effectively disables the mouse-wheel zoom feature (also see gestureSettings[Mouse|Touch|Pen].scrollToZoom}).</em>
   *
-  * @property {Number} [zoomPerDblClickDrag=1.2]
-  *     The "zoom distance" per double-click mouse drag. <em><strong>Note:</strong> Setting this to 1.0 effectively disables the double-click-drag-to-Zoom feature (also see gestureSettings[Mouse|Touch|Pen].dblClickDragToZoom).</em>
-  *
   * @property {Number} [zoomPerSecond=1.0]
-  *     Sets the zoom amount per second when zoomIn/zoomOut buttons are pressed and held.
-  *     The value is a factor of the current zoom, so 1.0 (the default) disables zooming when the zoomIn/zoomOut buttons
-  *     are held. Higher values will increase the rate of zoom when the zoomIn/zoomOut buttons are held. Note that values
-  *     < 1.0 will reverse the operation of the zoomIn/zoomOut buttons (zoomIn button will decrease the zoom, zoomOut will
-  *     increase the zoom).
+  *     The number of seconds to animate a single zoom event over.
   *
   * @property {Boolean} [showNavigator=false]
   *     Set to true to make the navigator minimap appear.
-  *
-  * @property {Element} [navigatorElement=null]
-  *     The element to hold the navigator minimap.
-  *     If an element is specified, the Id option (see navigatorId) is ignored.
-  *     If no element nor ID is specified, a div element will be generated accordingly.
   *
   * @property {String} [navigatorId=navigator-GENERATED DATE]
   *     The ID of a div to hold the navigator minimap.
@@ -511,14 +453,8 @@
   * @property {Number} [timeout=30000]
   *     The max number of milliseconds that an image job may take to complete.
   *
-  * @property {Number} [tileRetryMax=0]
-  *     The max number of retries when a tile download fails. By default it's 0, so retries are disabled.
-  *
-  * @property {Number} [tileRetryDelay=2500]
-  *     Milliseconds to wait after each tile retry if tileRetryMax is set.
-  *
   * @property {Boolean} [useCanvas=true]
-  *     Deprecated. Use the `drawer` option to specify preferred renderer.
+  *     Set to false to not use an HTML canvas element for image rendering even if canvas is supported.
   *
   * @property {Number} [minPixelRatio=0.5]
   *     The higher the minPixelRatio, the lower the quality of the image that
@@ -581,50 +517,50 @@
   *     viewing the first image and the 'next' button will wrap to the first
   *     image when viewing the last image.
   *
-  *@property {String|Element} zoomInButton
-  *     Set the id or element of the custom 'Zoom in' button to use.
+  * @property {String} zoomInButton
+  *     Set the id of the custom 'Zoom in' button to use.
   *     This is useful to have a custom button anywhere in the web page.<br>
   *     To only change the button images, consider using
   *     {@link OpenSeadragon.Options.navImages}
   *
-  * @property {String|Element} zoomOutButton
-  *     Set the id or element of the custom 'Zoom out' button to use.
+  * @property {String} zoomOutButton
+  *     Set the id of the custom 'Zoom out' button to use.
   *     This is useful to have a custom button anywhere in the web page.<br>
   *     To only change the button images, consider using
   *     {@link OpenSeadragon.Options.navImages}
   *
-  * @property {String|Element} homeButton
-  *     Set the id or element of the custom 'Go home' button to use.
+  * @property {String} homeButton
+  *     Set the id of the custom 'Go home' button to use.
   *     This is useful to have a custom button anywhere in the web page.<br>
   *     To only change the button images, consider using
   *     {@link OpenSeadragon.Options.navImages}
   *
-  * @property {String|Element} fullPageButton
-  *     Set the id or element of the custom 'Toggle full page' button to use.
+  * @property {String} fullPageButton
+  *     Set the id of the custom 'Toggle full page' button to use.
   *     This is useful to have a custom button anywhere in the web page.<br>
   *     To only change the button images, consider using
   *     {@link OpenSeadragon.Options.navImages}
   *
-  * @property {String|Element} rotateLeftButton
-  *     Set the id or element of the custom 'Rotate left' button to use.
+  * @property {String} rotateLeftButton
+  *     Set the id of the custom 'Rotate left' button to use.
   *     This is useful to have a custom button anywhere in the web page.<br>
   *     To only change the button images, consider using
   *     {@link OpenSeadragon.Options.navImages}
   *
-  * @property {String|Element} rotateRightButton
-  *     Set the id or element of the custom 'Rotate right' button to use.
+  * @property {String} rotateRightButton
+  *     Set the id of the custom 'Rotate right' button to use.
   *     This is useful to have a custom button anywhere in the web page.<br>
   *     To only change the button images, consider using
   *     {@link OpenSeadragon.Options.navImages}
   *
-  * @property {String|Element} previousButton
-  *     Set the id or element of the custom 'Previous page' button to use.
+  * @property {String} previousButton
+  *     Set the id of the custom 'Previous page' button to use.
   *     This is useful to have a custom button anywhere in the web page.<br>
   *     To only change the button images, consider using
   *     {@link OpenSeadragon.Options.navImages}
   *
-  * @property {String|Element} nextButton
-  *     Set the id or element of the custom 'Next page' button to use.
+  * @property {String} nextButton
+  *     Set the id of the custom 'Next page' button to use.
   *     This is useful to have a custom button anywhere in the web page.<br>
   *     To only change the button images, consider using
   *     {@link OpenSeadragon.Options.navImages}
@@ -703,20 +639,6 @@
   * @property {Object} [ajaxHeaders={}]
   *     A set of headers to include when making AJAX requests for tile sources or tiles.
   *
-  * @property {Boolean} [splitHashDataForPost=false]
-  *     Allows to treat _first_ hash ('#') symbol as a separator for POST data:
-  *     URL to be opened by a {@link OpenSeadragon.TileSource} can thus look like: http://some.url#postdata=here.
-  *     The whole URL is used to fetch image info metadata and it is then split to 'http://some.url' and
-  *     'postdata=here'; post data is given to the {@link OpenSeadragon.TileSource} of the choice and can be further
-  *     used within tile requests (see TileSource methods).
-  *     NOTE: {@link OpenSeadragon.TileSource.prototype.configure} return value should contain the post data
-  *     if you want to use it later - so that it is given to your constructor later.
-  *     NOTE: usually, post data is expected to be ampersand-separated (just like GET parameters), and is NOT USED
-  *     to fetch tile image data unless explicitly programmed, or if loadTilesWithAjax=false 4
-  *     (but it is still used for the initial image info request).
-  *     NOTE: passing POST data from URL by this feature only supports string values, however,
-  *     TileSource can send any data using POST as long as the header is correct
-  *     (@see OpenSeadragon.TileSource.prototype.getTilePostData)
   */
 
  /**
@@ -724,9 +646,6 @@
   *
   * @typedef {Object} GestureSettings
   * @memberof OpenSeadragon
-  *
-  * @property {Boolean} dragToPan
-  *     Set to false to disable panning on drag gestures.
   *
   * @property {Boolean} scrollToZoom
   *     Set to false to disable zooming on scroll gestures.
@@ -753,16 +672,6 @@
   *     Note: springStiffness and animationTime also affect the "spring" used to stop the flick animation.
   *
   */
-
- /**
-  * @typedef {Object} DrawerOptions
-  * @memberof OpenSeadragon
-  * @property {Object} webgl - options if the WebGLDrawer is used. No options are currently supported.
-  * @property {Object} canvas - options if the CanvasDrawer is used. No options are currently supported.
-  * @property {Object} html - options if the HTMLDrawer is used. No options are currently supported.
-  * @property {Object} custom - options if a custom drawer is used. No options are currently supported.
-  */
-
 
 /**
   * The names for the image resources used for the image navigation buttons.
@@ -858,16 +767,14 @@ function OpenSeadragon( options ){
      * @private
      */
     var class2type = {
-            '[object Boolean]':       'boolean',
-            '[object Number]':        'number',
-            '[object String]':        'string',
-            '[object Function]':      'function',
-            '[object AsyncFunction]': 'function',
-            '[object Promise]':       'promise',
-            '[object Array]':         'array',
-            '[object Date]':          'date',
-            '[object RegExp]':        'regexp',
-            '[object Object]':        'object'
+            '[object Boolean]':     'boolean',
+            '[object Number]':      'number',
+            '[object String]':      'string',
+            '[object Function]':    'function',
+            '[object Array]':       'array',
+            '[object Date]':        'date',
+            '[object RegExp]':      'regexp',
+            '[object Object]':      'object'
         },
         // Save a reference to some core methods
         toString    = Object.prototype.toString,
@@ -882,6 +789,7 @@ function OpenSeadragon( options ){
     $.isFunction = function( obj ) {
         return $.type(obj) === "function";
     };
+
 
     /**
      * Taken from jQuery 1.6.1
@@ -968,7 +876,7 @@ function OpenSeadragon( options ){
     /**
      * Shim around Object.freeze. Does nothing if Object.freeze is not supported.
      * @param {Object} obj The object to freeze.
-     * @returns {Object} obj The frozen object.
+     * @return {Object} obj The frozen object.
      */
     $.freezeObject = function(obj) {
         if (Object.freeze) {
@@ -1010,64 +918,12 @@ function OpenSeadragon( options ){
     };
 
     /**
-     * True if the browser supports the EventTarget.addEventListener() method
-     * @member {Boolean} supportsAddEventListener
-     * @memberof OpenSeadragon
-     */
-    $.supportsAddEventListener = (function () {
-        return !!(document.documentElement.addEventListener && document.addEventListener);
-    }());
-
-    /**
-     * True if the browser supports the EventTarget.removeEventListener() method
-     * @member {Boolean} supportsRemoveEventListener
-     * @memberof OpenSeadragon
-     */
-    $.supportsRemoveEventListener = (function () {
-        return !!(document.documentElement.removeEventListener && document.removeEventListener);
-    }());
-
-    /**
-     * True if the browser supports the newer EventTarget.addEventListener options argument
-     * @member {Boolean} supportsEventListenerOptions
-     * @memberof OpenSeadragon
-     */
-    $.supportsEventListenerOptions = (function () {
-        var supported = 0;
-
-        if ( $.supportsAddEventListener ) {
-            try {
-                var options = {
-                    get capture() {
-                        supported++;
-                        return false;
-                    },
-                    get once() {
-                        supported++;
-                        return false;
-                    },
-                    get passive() {
-                        supported++;
-                        return false;
-                    }
-                };
-                window.addEventListener("test", null, options);
-                window.removeEventListener("test", null, options);
-            } catch ( e ) {
-                supported = 0;
-            }
-        }
-
-        return supported >= 3;
-    }());
-
-    /**
      * A ratio comparing the device screen's pixel density to the canvas's backing store pixel density,
      * clamped to a minimum of 1. Defaults to 1 if canvas isn't supported by the browser.
      * @member {Number} pixelDensityRatio
      * @memberof OpenSeadragon
      */
-    $.getCurrentPixelDensityRatio = function() {
+    $.pixelDensityRatio = (function () {
         if ( $.supportsCanvas ) {
             var context = document.createElement('canvas').getContext('2d');
             var devicePixelRatio = window.devicePixelRatio || 1;
@@ -1080,19 +936,13 @@ function OpenSeadragon( options ){
         } else {
             return 1;
         }
-    };
-
-    /**
-     * @member {Number} pixelDensityRatio
-     * @memberof OpenSeadragon
-     */
-    $.pixelDensityRatio = $.getCurrentPixelDensityRatio();
+    }());
 
 }( OpenSeadragon ));
 
 /**
  *  This closure defines all static methods available to the OpenSeadragon
- *  namespace.  Many, if not most, are taken directly from jQuery for use
+ *  namespace.  Many, if not most, are taked directly from jQuery for use
  *  to simplify and reduce common programming patterns.  More static methods
  *  from jQuery may eventually make their way into this though we are
  *  attempting to avoid an explicit dependency on jQuery only because
@@ -1147,19 +997,8 @@ function OpenSeadragon( options ){
             if ( options !== null || options !== undefined ) {
                 // Extend the base object
                 for ( name in options ) {
-                    var descriptor = Object.getOwnPropertyDescriptor(options, name);
-
-                    if (descriptor !== undefined) {
-                        if (descriptor.get || descriptor.set) {
-                            Object.defineProperty(target, name, descriptor);
-                            continue;
-                        }
-
-                        copy = descriptor.value;
-                    } else {
-                        $.console.warn('Could not copy inherited property "' + name + '".');
-                        continue;
-                    }
+                    src = target[ name ];
+                    copy = options[ name ];
 
                     // Prevent never-ending loop
                     if ( target === copy ) {
@@ -1168,8 +1007,6 @@ function OpenSeadragon( options ){
 
                     // Recurse if we're merging plain objects or arrays
                     if ( deep && copy && ( OpenSeadragon.isPlainObject( copy ) || ( copyIsArray = OpenSeadragon.isArray( copy ) ) ) ) {
-                        src = target[ name ];
-
                         if ( copyIsArray ) {
                             copyIsArray = false;
                             clone = src && OpenSeadragon.isArray( src ) ? src : [];
@@ -1222,7 +1059,6 @@ function OpenSeadragon( options ){
             ajaxWithCredentials:    false,
             loadTilesWithAjax:      false,
             ajaxHeaders:            {},
-            splitHashDataForPost:   false,
 
             //PAN AND ZOOM SETTINGS AND CONSTRAINTS
             panHorizontal:          true,
@@ -1245,11 +1081,9 @@ function OpenSeadragon( options ){
             springStiffness:        6.5,
             animationTime:          1.2,
             gestureSettingsMouse:   {
-                dragToPan: true,
                 scrollToZoom: true,
                 clickToZoom: true,
                 dblClickToZoom: false,
-                dblClickDragToZoom: false,
                 pinchToZoom: false,
                 zoomToRefPoint: true,
                 flickEnabled: false,
@@ -1258,11 +1092,9 @@ function OpenSeadragon( options ){
                 pinchRotate: false
             },
             gestureSettingsTouch:   {
-                dragToPan: true,
                 scrollToZoom: false,
                 clickToZoom: false,
                 dblClickToZoom: true,
-                dblClickDragToZoom: true,
                 pinchToZoom: true,
                 zoomToRefPoint: true,
                 flickEnabled: true,
@@ -1271,11 +1103,9 @@ function OpenSeadragon( options ){
                 pinchRotate: false
             },
             gestureSettingsPen:     {
-                dragToPan: true,
                 scrollToZoom: false,
                 clickToZoom: true,
                 dblClickToZoom: false,
-                dblClickDragToZoom: false,
                 pinchToZoom: false,
                 zoomToRefPoint: true,
                 flickEnabled: false,
@@ -1284,11 +1114,9 @@ function OpenSeadragon( options ){
                 pinchRotate: false
             },
             gestureSettingsUnknown: {
-                dragToPan: true,
                 scrollToZoom: false,
                 clickToZoom: false,
                 dblClickToZoom: true,
-                dblClickDragToZoom: false,
                 pinchToZoom: true,
                 zoomToRefPoint: true,
                 flickEnabled: true,
@@ -1298,7 +1126,6 @@ function OpenSeadragon( options ){
             },
             zoomPerClick:           2,
             zoomPerScroll:          1.2,
-            zoomPerDblClickDrag:    1.2,
             zoomPerSecond:          1.0,
             blendTime:              0,
             alwaysBlend:            false,
@@ -1314,7 +1141,6 @@ function OpenSeadragon( options ){
             preserveImageSizeOnResize: false, // requires autoResize=true
             minScrollDeltaTime:     50,
             rotationIncrement:      90,
-            maxTilesPerFrame:       1,
 
             //DEFAULT CONTROL SETTINGS
             showSequenceControl:     true,  //SEQUENCE
@@ -1335,7 +1161,6 @@ function OpenSeadragon( options ){
 
             //VIEWPORT NAVIGATOR SETTINGS
             showNavigator:              false,
-            navigatorElement:           null,
             navigatorId:                null,
             navigatorPosition:          null,
             navigatorSizeRatio:         0.2,
@@ -1359,32 +1184,11 @@ function OpenSeadragon( options ){
             flipped:                    false,
 
             // APPEARANCE
-            opacity:                           1, // to be passed into each TiledImage
-            compositeOperation:                null, // to be passed into each TiledImage
-
-            // DRAWER SETTINGS
-            drawer:                            ['webgl', 'canvas', 'html'], // prefer using webgl, then canvas (i.e. context2d), then fallback to html
-
-            drawerOptions: {
-                webgl: {
-
-                },
-                canvas: {
-
-                },
-                html: {
-
-                },
-                custom: {
-
-                }
-            },
-
-            // TILED IMAGE SETTINGS
-            preload:                           false, // to be passed into each TiledImage
-            imageSmoothingEnabled:             true,  // to be passed into each TiledImage
-            placeholderFillStyle:              null,  // to be passed into each TiledImage
-            subPixelRoundingForTransparency:   null,  // to be passed into each TiledImage
+            opacity:                    1,
+            preload:                    false,
+            compositeOperation:         null,
+            imageSmoothingEnabled:      true,
+            placeholderFillStyle:       null,
 
             //REFERENCE STRIP SETTINGS
             showReferenceStrip:          false,
@@ -1407,8 +1211,7 @@ function OpenSeadragon( options ){
             imageLoaderLimit:       0,
             maxImageCacheCount:     200,
             timeout:                30000,
-            tileRetryMax:           0,
-            tileRetryDelay:         2500,
+            useCanvas:              true,  // Use canvas element for drawing if available
 
             //INTERFACE RESOURCE SETTINGS
             prefixUrl:              "/images/",
@@ -1471,10 +1274,18 @@ function OpenSeadragon( options ){
 
             //DEVELOPER SETTINGS
             debugMode:              false,
-            debugGridColor:         ['#437AB2', '#1B9E77', '#D95F02', '#7570B3', '#E7298A', '#66A61E', '#E6AB02', '#A6761D', '#666666'],
-            silenceMultiImageWarnings: false
-
+            debugGridColor:         ['#437AB2', '#1B9E77', '#D95F02', '#7570B3', '#E7298A', '#66A61E', '#E6AB02', '#A6761D', '#666666']
         },
+
+
+        /**
+         * TODO: get rid of this.  I can't see how it's required at all.  Looks
+         *       like an early legacy code artifact.
+         * @static
+         * @ignore
+         */
+        SIGNAL: "----seadragon----",
+
 
         /**
          * Returns a function which invokes the method as if it were a method belonging to the object.
@@ -1504,8 +1315,6 @@ function OpenSeadragon( options ){
          * @property {Number} SAFARI
          * @property {Number} CHROME
          * @property {Number} OPERA
-         * @property {Number} EDGE
-         * @property {Number} CHROMEEDGE
          */
         BROWSERS: {
             UNKNOWN:    0,
@@ -1513,45 +1322,9 @@ function OpenSeadragon( options ){
             FIREFOX:    2,
             SAFARI:     3,
             CHROME:     4,
-            OPERA:      5,
-            EDGE:       6,
-            CHROMEEDGE: 7
+            OPERA:      5
         },
 
-        /**
-         * An enumeration of when subpixel rounding should occur.
-         * @static
-         * @type {Object}
-         * @property {Number} NEVER Never apply subpixel rounding for transparency.
-         * @property {Number} ONLY_AT_REST Do not apply subpixel rounding for transparency during animation (panning, zoom, rotation) and apply it once animation is over.
-         * @property {Number} ALWAYS Apply subpixel rounding for transparency during animation and when animation is over.
-         */
-        SUBPIXEL_ROUNDING_OCCURRENCES: {
-            NEVER:        0,
-            ONLY_AT_REST: 1,
-            ALWAYS:       2
-        },
-
-        /**
-         * Keep track of which {@link Viewer}s have been created.
-         * - Key: {@link Element} to which a Viewer is attached.
-         * - Value: {@link Viewer} of the element defined by the key.
-         * @private
-         * @static
-         * @type {Object}
-         */
-        _viewers: new Map(),
-
-       /**
-         * Returns the {@link Viewer} attached to a given DOM element. If there is
-         * no viewer attached to the provided element, undefined is returned.
-         * @function
-         * @param {String|Element} element Accepts an id or element.
-         * @returns {Viewer} The viewer attached to the given element, or undefined.
-         */
-        getViewer: function(element) {
-            return $._viewers.get(this.getElement(element));
-        },
 
         /**
          * Returns a DOM Element for the given id or element.
@@ -1560,7 +1333,7 @@ function OpenSeadragon( options ){
          * @returns {Element} The element with the given id, null, or the element itself.
          */
         getElement: function( element ) {
-            if ( typeof ( element ) === "string" ) {
+            if ( typeof ( element ) == "string" ) {
                 element = document.getElementById( element );
             }
             return element;
@@ -1579,7 +1352,7 @@ function OpenSeadragon( options ){
                 offsetParent;
 
             element      = $.getElement( element );
-            isFixed      = $.getElementStyle( element ).position === "fixed";
+            isFixed      = $.getElementStyle( element ).position == "fixed";
             offsetParent = getOffsetParent( element, isFixed );
 
             while ( offsetParent ) {
@@ -1592,7 +1365,7 @@ function OpenSeadragon( options ){
                 }
 
                 element = offsetParent;
-                isFixed = $.getElementStyle( element ).position === "fixed";
+                isFixed = $.getElementStyle( element ).position == "fixed";
                 offsetParent = getOffsetParent( element, isFixed );
             }
 
@@ -1624,7 +1397,7 @@ function OpenSeadragon( options ){
                 boundingRect = element.getBoundingClientRect();
             }
 
-            win = ( doc === doc.window ) ?
+            win = ( doc == doc.window ) ?
                 doc :
                 ( doc.nodeType === 9 ) ?
                     doc.defaultView || doc.parentWindow :
@@ -1716,8 +1489,8 @@ function OpenSeadragon( options ){
 
         /**
          * Compute the modulo of a number but makes sure to always return
-         * a positive value (also known as Euclidean modulo).
-         * @param {Number} number the number to compute the modulo of
+         * a positive value.
+         * @param {Number} number the number to computes the modulo of
          * @param {Number} modulo the modulo
          * @returns {Number} the result of the modulo of number
          */
@@ -1728,7 +1501,6 @@ function OpenSeadragon( options ){
             }
             return result;
         },
-
 
         /**
          * Determines if a point is within the bounding rectangle of the given element (hit-test).
@@ -1746,6 +1518,29 @@ function OpenSeadragon( options ){
 
 
         /**
+         * Gets the latest event, really only useful internally since its
+         * specific to IE behavior.
+         * @function
+         * @param {Event} [event]
+         * @returns {Event}
+         * @deprecated For internal use only
+         * @private
+         */
+        getEvent: function( event ) {
+            if( event ){
+                $.getEvent = function( event ) {
+                    return event;
+                };
+            } else {
+                $.getEvent = function() {
+                    return window.event;
+                };
+            }
+            return $.getEvent( event );
+        },
+
+
+        /**
          * Gets the position of the mouse on the screen for a given event.
          * @function
          * @param {Event} [event]
@@ -1753,19 +1548,21 @@ function OpenSeadragon( options ){
          */
         getMousePosition: function( event ) {
 
-            if ( typeof ( event.pageX ) === "number" ) {
+            if ( typeof ( event.pageX ) == "number" ) {
                 $.getMousePosition = function( event ){
                     var result = new $.Point();
 
+                    event = $.getEvent( event );
                     result.x = event.pageX;
                     result.y = event.pageY;
 
                     return result;
                 };
-            } else if ( typeof ( event.clientX ) === "number" ) {
+            } else if ( typeof ( event.clientX ) == "number" ) {
                 $.getMousePosition = function( event ){
                     var result = new $.Point();
 
+                    event = $.getEvent( event );
                     result.x =
                         event.clientX +
                         document.body.scrollLeft +
@@ -1796,7 +1593,7 @@ function OpenSeadragon( options ){
             var docElement  = document.documentElement || {},
                 body        = document.body || {};
 
-            if ( typeof ( window.pageXOffset ) === "number" ) {
+            if ( typeof ( window.pageXOffset ) == "number" ) {
                 $.getPageScroll = function(){
                     return new $.Point(
                         window.pageXOffset,
@@ -1873,7 +1670,7 @@ function OpenSeadragon( options ){
                 };
             }
 
-            $.setPageScroll( scroll );
+            return $.setPageScroll( scroll );
         },
 
         /**
@@ -1885,7 +1682,7 @@ function OpenSeadragon( options ){
             var docElement = document.documentElement || {},
                 body    = document.body || {};
 
-            if ( typeof ( window.innerWidth ) === 'number' ) {
+            if ( typeof ( window.innerWidth ) == 'number' ) {
                 $.getWindowSize = function(){
                     return new $.Point(
                         window.innerWidth,
@@ -2001,16 +1798,51 @@ function OpenSeadragon( options ){
 
         /**
          * Ensures an image is loaded correctly to support alpha transparency.
+         * Generally only IE has issues doing this correctly for formats like
+         * png.
          * @function
          * @param {String} src
          * @returns {Element}
          */
         makeTransparentImage: function( src ) {
-            var img = $.makeNeutralElement( "img" );
 
-            img.src = src;
+            $.makeTransparentImage = function( src ){
+                var img = $.makeNeutralElement( "img" );
 
-            return img;
+                img.src = src;
+
+                return img;
+            };
+
+            if ( $.Browser.vendor == $.BROWSERS.IE && $.Browser.version < 7 ) {
+
+                $.makeTransparentImage = function( src ){
+                    var img     = $.makeNeutralElement( "img" ),
+                        element = null;
+
+                    element = $.makeNeutralElement("span");
+                    element.style.display = "inline-block";
+
+                    img.onload = function() {
+                        element.style.width  = element.style.width || img.width + "px";
+                        element.style.height = element.style.height || img.height + "px";
+
+                        img.onload = null;
+                        img = null;     // to prevent memory leaks in IE
+                    };
+
+                    img.src = src;
+                    element.style.filter =
+                        "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='" +
+                        src +
+                        "', sizingMethod='scale')";
+
+                    return element;
+                };
+
+            }
+
+            return $.makeTransparentImage( src );
         },
 
 
@@ -2058,30 +1890,6 @@ function OpenSeadragon( options ){
             } else if ( typeof element.style.msTouchAction !== 'undefined' ) {
                 element.style.msTouchAction = 'none';
             }
-        },
-
-
-        /**
-         * Sets the specified element's pointer-events style attribute to the passed value.
-         * @function
-         * @param {Element|String} element
-         * @param {String} value
-         */
-        setElementPointerEvents: function( element, value ) {
-            element = $.getElement( element );
-            if (typeof element.style !== 'undefined' && typeof element.style.pointerEvents !== 'undefined' ) {
-                element.style.pointerEvents = value;
-            }
-        },
-
-
-        /**
-         * Sets the specified element's pointer-events style attribute to 'none'.
-         * @function
-         * @param {Element|String} element
-         */
-        setElementPointerEventsNone: function( element ) {
-            $.setElementPointerEvents( element, 'none' );
         },
 
 
@@ -2170,34 +1978,6 @@ function OpenSeadragon( options ){
             element.className = newClasses.join(' ');
         },
 
-        /**
-         * Convert passed addEventListener() options to boolean or options object,
-         * depending on browser support.
-         * @function
-         * @param {Boolean|Object} [options] Boolean useCapture, or if [supportsEventListenerOptions]{@link OpenSeadragon.supportsEventListenerOptions}, can be an object
-         * @param {Boolean} [options.capture]
-         * @param {Boolean} [options.passive]
-         * @param {Boolean} [options.once]
-         * @returns {String} The protocol (http:, https:, file:, ftp: ...)
-         */
-        normalizeEventListenerOptions: function (options) {
-            var opts;
-            if ( typeof options !== 'undefined' ) {
-                if ( typeof options === 'boolean' ) {
-                    // Legacy Boolean useCapture
-                    opts = $.supportsEventListenerOptions ? { capture: options } : options;
-                } else {
-                    // Options object
-                    opts = $.supportsEventListenerOptions ? options :
-                        ( ( typeof options.capture !== 'undefined' ) ? options.capture : false );
-                }
-            } else {
-                // No options specified - Legacy optional useCapture argument
-                //   (for IE, first supported on version 9, so we'll pass a Boolean)
-                opts = $.supportsEventListenerOptions ? { capture: false } : false;
-            }
-            return opts;
-        },
 
         /**
          * Adds an event listener for the given element, eventName and handler.
@@ -2205,20 +1985,16 @@ function OpenSeadragon( options ){
          * @param {Element|String} element
          * @param {String} eventName
          * @param {Function} handler
-         * @param {Boolean|Object} [options] Boolean useCapture, or if [supportsEventListenerOptions]{@link OpenSeadragon.supportsEventListenerOptions}, can be an object
-         * @param {Boolean} [options.capture]
-         * @param {Boolean} [options.passive]
-         * @param {Boolean} [options.once]
+         * @param {Boolean} [useCapture]
          */
         addEvent: (function () {
-            if ( $.supportsAddEventListener ) {
-                return function ( element, eventName, handler, options ) {
-                    options = $.normalizeEventListenerOptions(options);
+            if ( window.addEventListener ) {
+                return function ( element, eventName, handler, useCapture ) {
                     element = $.getElement( element );
-                    element.addEventListener( eventName, handler, options );
+                    element.addEventListener( eventName, handler, useCapture );
                 };
-            } else if ( document.documentElement.attachEvent && document.attachEvent ) {
-                return function ( element, eventName, handler ) {
+            } else if ( window.attachEvent ) {
+                return function ( element, eventName, handler, useCapture ) {
                     element = $.getElement( element );
                     element.attachEvent( 'on' + eventName, handler );
                 };
@@ -2235,18 +2011,16 @@ function OpenSeadragon( options ){
          * @param {Element|String} element
          * @param {String} eventName
          * @param {Function} handler
-         * @param {Boolean|Object} [options] Boolean useCapture, or if [supportsEventListenerOptions]{@link OpenSeadragon.supportsEventListenerOptions}, can be an object
-         * @param {Boolean} [options.capture]
+         * @param {Boolean} [useCapture]
          */
         removeEvent: (function () {
-            if ( $.supportsRemoveEventListener ) {
-                return function ( element, eventName, handler, options ) {
-                    options = $.normalizeEventListenerOptions(options);
+            if ( window.removeEventListener ) {
+                return function ( element, eventName, handler, useCapture ) {
                     element = $.getElement( element );
-                    element.removeEventListener( eventName, handler, options );
+                    element.removeEventListener( eventName, handler, useCapture );
                 };
-            } else if ( document.documentElement.detachEvent && document.detachEvent ) {
-                return function( element, eventName, handler ) {
+            } else if ( window.detachEvent ) {
+                return function( element, eventName, handler, useCapture ) {
                     element = $.getElement( element );
                     element.detachEvent( 'on' + eventName, handler );
                 };
@@ -2263,36 +2037,70 @@ function OpenSeadragon( options ){
          * @param {Event} [event]
          */
         cancelEvent: function( event ) {
-            event.preventDefault();
+            event = $.getEvent( event );
+
+            if ( event.preventDefault ) {
+                $.cancelEvent = function( event ){
+                    // W3C for preventing default
+                    event.preventDefault();
+                };
+            } else {
+                $.cancelEvent = function( event ){
+                    event = $.getEvent( event );
+                    // legacy for preventing default
+                    event.cancel = true;
+                    // IE for preventing default
+                    event.returnValue = false;
+                };
+            }
+            $.cancelEvent( event );
         },
 
 
         /**
-         * Returns true if {@link OpenSeadragon.cancelEvent|cancelEvent} has been called on
-         * the event, otherwise returns false.
-         * @function
-         * @param {Event} [event]
-         */
-        eventIsCanceled: function( event ) {
-            return event.defaultPrevented;
-        },
-
-
-        /**
-         * Stops the propagation of the event through the DOM in the capturing and bubbling phases.
+         * Stops the propagation of the event up the DOM.
          * @function
          * @param {Event} [event]
          */
         stopEvent: function( event ) {
-            event.stopPropagation();
+            event = $.getEvent( event );
+
+            if ( event.stopPropagation ) {
+                // W3C for stopping propagation
+                $.stopEvent = function( event ){
+                    event.stopPropagation();
+                };
+            } else {
+                // IE for stopping propagation
+                $.stopEvent = function( event ){
+                    event = $.getEvent( event );
+                    event.cancelBubble = true;
+                };
+
+            }
+
+            $.stopEvent( event );
         },
 
-        // Deprecated
+
+        /**
+         * Similar to OpenSeadragon.delegate, but it does not immediately call
+         * the method on the object, returning a function which can be called
+         * repeatedly to delegate the method. It also allows additional arguments
+         * to be passed during construction which will be added during each
+         * invocation, and each invocation can add additional arguments as well.
+         *
+         * @function
+         * @param {Object} object
+         * @param {Function} method
+         * @param [args] any additional arguments are passed as arguments to the
+         *  created callback
+         * @returns {Function}
+         */
         createCallback: function( object, method ) {
             //TODO: This pattern is painful to use and debug.  It's much cleaner
             //      to use pinning plus anonymous functions.  Get rid of this
             //      pattern!
-            console.error('The createCallback function is deprecated and will be removed in future versions. Please use alternativeFunction instead.');
             var initialArgs = [],
                 i;
             for ( i = 2; i < arguments.length; i++ ) {
@@ -2329,7 +2137,7 @@ function OpenSeadragon( options ){
          * @function
          * @private
          * @param {String} url The url to retrieve the protocol from.
-         * @returns {String} The protocol (http:, https:, file:, ftp: ...)
+         * @return {String} The protocol (http:, https:, file:, ftp: ...)
          */
         getUrlProtocol: function( url ) {
             var match = url.match(/^([a-z]+:)\/\//i);
@@ -2389,9 +2197,7 @@ function OpenSeadragon( options ){
          * @param {Function} options.success - a function to call on a successful response
          * @param {Function} options.error - a function to call on when an error occurs
          * @param {Object} options.headers - headers to add to the AJAX request
-         * @param {String} options.responseType - the response type of the AJAX request
-         * @param {String} options.postData - HTTP POST data (usually but not necessarily in k=v&k2=v2... form,
-         *      see TileSource::getPostData), GET method used if null
+         * @param {String} options.responseType - the response type of the the AJAX request
          * @param {Boolean} [options.withCredentials=false] - whether to set the XHR's withCredentials
          * @throws {Error}
          * @returns {XMLHttpRequest}
@@ -2400,7 +2206,6 @@ function OpenSeadragon( options ){
             var withCredentials;
             var headers;
             var responseType;
-            var postData;
 
             // Note that our preferred API is that you pass in a single object; the named
             // arguments are for legacy support.
@@ -2410,7 +2215,6 @@ function OpenSeadragon( options ){
                 withCredentials = url.withCredentials;
                 headers = url.headers;
                 responseType = url.responseType || null;
-                postData = url.postData || null;
                 url = url.url;
             }
 
@@ -2423,7 +2227,7 @@ function OpenSeadragon( options ){
 
             request.onreadystatechange = function() {
                 // 4 = DONE (https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#Properties)
-                if ( request.readyState === 4 ) {
+                if ( request.readyState == 4 ) {
                     request.onreadystatechange = function(){};
 
                     // With protocols other than http/https, a successful request status is in
@@ -2434,18 +2238,17 @@ function OpenSeadragon( options ){
                           protocol !== "https:" )) {
                         onSuccess( request );
                     } else {
+                        $.console.log( "AJAX request returned %d: %s", request.status, url );
+
                         if ( $.isFunction( onError ) ) {
                             onError( request );
-                        } else {
-                            $.console.error( "AJAX request returned %d: %s", request.status, url );
                         }
                     }
                 }
             };
 
-            var method = postData ? "POST" : "GET";
             try {
-                request.open( method, url, true );
+                request.open( "GET", url, true );
 
                 if (responseType) {
                     request.responseType = responseType;
@@ -2463,14 +2266,64 @@ function OpenSeadragon( options ){
                     request.withCredentials = true;
                 }
 
-                request.send(postData);
+                request.send(null);
             } catch (e) {
-                $.console.error( "%s while making AJAX request: %s", e.name, e.message );
+                var msg = e.message;
+
+                /*
+                    IE < 10 does not support CORS and an XHR request to a different origin will fail as soon
+                    as send() is called. This is particularly easy to miss during development and appear in
+                    production if you use a CDN or domain sharding and the security policy is likely to break
+                    exception handlers since any attempt to access a property of the request object will
+                    raise an access denied TypeError inside the catch block.
+
+                    To be friendlier, we'll check for this specific error and add a documentation pointer
+                    to point developers in the right direction. We test the exception number because IE's
+                    error messages are localized.
+                */
+                var oldIE = $.Browser.vendor == $.BROWSERS.IE && $.Browser.version < 10;
+                if ( oldIE && typeof ( e.number ) != "undefined" && e.number == -2147024891 ) {
+                    msg += "\nSee http://msdn.microsoft.com/en-us/library/ms537505(v=vs.85).aspx#xdomain";
+                }
+
+                $.console.log( "%s while making AJAX request: %s", e.name, msg );
 
                 request.onreadystatechange = function(){};
 
-                if ( $.isFunction( onError ) ) {
-                    onError( request, e );
+                if (window.XDomainRequest) { // IE9 or IE8 might as well try to use XDomainRequest
+                    var xdr = new window.XDomainRequest();
+                    if (xdr) {
+                        xdr.onload = function (e) {
+                            if ( $.isFunction( onSuccess ) ) {
+                                onSuccess({ // Faking an xhr object
+                                    responseText: xdr.responseText,
+                                    status: 200, // XDomainRequest doesn't support status codes, so we just fake one! :/
+                                    statusText: 'OK'
+                                });
+                            }
+                        };
+                        xdr.onerror = function (e) {
+                            if ($.isFunction(onError)) {
+                                onError({ // Faking an xhr object
+                                    responseText: xdr.responseText,
+                                    status: 444, // 444 No Response
+                                    statusText: 'An error happened. Due to an XDomainRequest deficiency we can not extract any information about this error. Upgrade your browser.'
+                                });
+                            }
+                        };
+                        try {
+                            xdr.open('GET', url);
+                            xdr.send();
+                        } catch (e2) {
+                            if ( $.isFunction( onError ) ) {
+                                onError( request, e );
+                            }
+                        }
+                    }
+                } else {
+                    if ( $.isFunction( onError ) ) {
+                        onError( request, e );
+                    }
                 }
             }
 
@@ -2500,7 +2353,7 @@ function OpenSeadragon( options ){
                 callbackParam = options.param || 'callback',
                 callback      = options.callback;
 
-            url = url.replace( /(=)\?(&|$)|\?\?/i, replace );
+            url = url.replace( /(\=)\?(&|$)|\?\?/i, replace );
             // Add callback manually
             url += (/\?/.test( url ) ? "&" : "?") + callbackParam + "=" + jsonpCallback;
 
@@ -2609,7 +2462,16 @@ function OpenSeadragon( options ){
          * @returns {Object}
          */
         parseJSON: function(string) {
-            $.parseJSON = window.JSON.parse;
+            if (window.JSON && window.JSON.parse) {
+                $.parseJSON = window.JSON.parse;
+            } else {
+                // Should only be used by IE8 in non standards mode
+                $.parseJSON = function(string) {
+                    /*jshint evil:true*/
+                    //eslint-disable-next-line no-eval
+                    return eval('(' + string + ')');
+                };
+            }
             return $.parseJSON(string);
         },
 
@@ -2624,32 +2486,6 @@ function OpenSeadragon( options ){
             extension = extension ? extension : "";
             // eslint-disable-next-line no-use-before-define
             return !!FILEFORMATS[ extension.toLowerCase() ];
-        },
-
-        /**
-         * Updates supported image formats with user-specified values.
-         * Preexisting formats that are not being updated are left unchanged.
-         * By default, the defined formats are
-         * <pre><code>{
-         *      bmp:  false,
-         *      jpeg: true,
-         *      jpg:  true,
-         *      png:  true,
-         *      tif:  false,
-         *      wdp:  false,
-         *      webp: true
-         * }
-         * </code></pre>
-         * @function
-         * @example
-         * // sets bmp as supported and png as unsupported
-         * setImageFormatsSupported({bmp: true, png: false});
-         * @param {Object} formats An object containing format extensions as
-         * keys and booleans as values.
-         */
-        setImageFormatsSupported: function(formats) {
-            // eslint-disable-next-line no-use-before-define
-            $.extend(FILEFORMATS, formats);
         }
 
     });
@@ -2698,13 +2534,12 @@ function OpenSeadragon( options ){
 
 
     var FILEFORMATS = {
-            bmp:  false,
-            jpeg: true,
-            jpg:  true,
-            png:  true,
-            tif:  false,
-            wdp:  false,
-            webp: true
+            "bmp":  false,
+            "jpeg": true,
+            "jpg":  true,
+            "png":  true,
+            "tif":  false,
+            "wdp":  false
         },
         URLPARAMS = {};
 
@@ -2734,17 +2569,7 @@ function OpenSeadragon( options ){
                 break;
             case "Netscape":
                 if (window.addEventListener) {
-                    if ( ua.indexOf( "Edge" ) >= 0 ) {
-                        $.Browser.vendor = $.BROWSERS.EDGE;
-                        $.Browser.version = parseFloat(
-                            ua.substring( ua.indexOf( "Edge" ) + 5 )
-                        );
-                    } else if ( ua.indexOf( "Edg" ) >= 0 ) {
-                        $.Browser.vendor = $.BROWSERS.CHROMEEDGE;
-                        $.Browser.version = parseFloat(
-                            ua.substring( ua.indexOf( "Edg" ) + 4 )
-                        );
-                    } else if ( ua.indexOf( "Firefox" ) >= 0 ) {
+                    if ( ua.indexOf( "Firefox" ) >= 0 ) {
                         $.Browser.vendor = $.BROWSERS.FIREFOX;
                         $.Browser.version = parseFloat(
                             ua.substring( ua.indexOf( "Firefox" ) + 8 )
@@ -2798,15 +2623,21 @@ function OpenSeadragon( options ){
 
         //determine if this browser supports image alpha transparency
         $.Browser.alpha = !(
-            $.Browser.vendor === $.BROWSERS.CHROME && $.Browser.version < 2
+            (
+                $.Browser.vendor == $.BROWSERS.IE &&
+                $.Browser.version < 9
+            ) || (
+                $.Browser.vendor == $.BROWSERS.CHROME &&
+                $.Browser.version < 2
+            )
         );
 
         //determine if this browser supports element.style.opacity
-        $.Browser.opacity = true;
+        $.Browser.opacity = !(
+            $.Browser.vendor == $.BROWSERS.IE &&
+            $.Browser.version < 9
+        );
 
-        if ( $.Browser.vendor === $.BROWSERS.IE && $.Browser.version < 11 ) {
-            $.console.error('Internet Explorer versions < 11 are not supported by OpenSeadragon');
-        }
     })();
 
 
@@ -2905,7 +2736,7 @@ function OpenSeadragon( options ){
      * @returns {Element}
      */
     function getOffsetParent( element, isFixed ) {
-        if ( isFixed && element !== document.body ) {
+        if ( isFixed && element != document.body ) {
             return document.body;
         } else {
             return element.offsetParent;

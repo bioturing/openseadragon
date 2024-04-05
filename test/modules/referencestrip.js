@@ -10,8 +10,8 @@
             testLog.reset();
         },
         afterEach: function () {
-            if (viewer){
-                viewer.destroy();
+            if (viewer && viewer.close) {
+                viewer.close();
             }
 
             viewer = null;

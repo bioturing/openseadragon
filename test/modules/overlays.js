@@ -16,22 +16,12 @@
         },
         afterEach: function() {
             resetTestVariables();
-
-            if (viewer){
-                viewer.destroy();
-            }
-
-            viewer = null;
         }
     });
 
     var resetTestVariables = function() {
-        if (viewer){
-            let errors = viewer.drawer._numGlMaxTextureErrors;
-            if(errors > 0){
-                console.log('Number of times MAX_TEXTURE_IMAGE_UNITS had a bad value:', errors);
-            }
-            viewer.destroy();
+        if (viewer) {
+            viewer.close();
         }
     };
 

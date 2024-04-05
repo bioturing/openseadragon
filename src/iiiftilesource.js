@@ -2,7 +2,7 @@
  * OpenSeadragon - IIIFTileSource
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -51,11 +51,8 @@ $.IIIFTileSource = function( options ){
 
     $.extend( true, this, options );
 
-    /* Normalizes v3-style 'id' keys to an "_id" internal property */
-    this._id = this["@id"] || this["id"] || this['identifier'] || null;
-
-    if ( !( this.height && this.width && this._id) ) {
-        throw new Error( 'IIIF required parameters (width, height, or id) not provided.' );
+    if ( !( this.height && this.width && this['@id'] ) ) {
+        throw new Error( 'IIIF required parameters not provided.' );
     }
 
     options.tileSizePerScaleFactor = {};
@@ -74,7 +71,7 @@ $.IIIFTileSource = function( options ){
         options.tileSize = this.tile_height;
     } else if ( this.tiles ) {
         // Version 2.0 forwards
-        if ( this.tiles.length === 1 ) {
+        if ( this.tiles.length == 1 ) {
             options.tileWidth  = this.tiles[0].width;
             // Use height if provided, otherwise assume square tiles and use width.
             options.tileHeight = this.tiles[0].height || this.tiles[0].width;
@@ -134,22 +131,10 @@ $.IIIFTileSource = function( options ){
 
     if (!options.maxLevel && !this.emulateLegacyImagePyramid) {
         if (!this.scale_factors) {
-            options.maxLevel = Number(Math.round(Math.log(Math.max(this.width, this.height), 2)));
+            options.maxLevel = Number(Math.ceil(Math.log(Math.max(this.width, this.height), 2)));
         } else {
             var maxScaleFactor = Math.max.apply(null, this.scale_factors);
             options.maxLevel = Math.round(Math.log(maxScaleFactor) * Math.LOG2E);
-        }
-    }
-
-    // Create an array with our exact resolution sizes if these have been supplied
-    if( this.sizes ) {
-        var sizeLength = this.sizes.length;
-        if ( (sizeLength === options.maxLevel) || (sizeLength === options.maxLevel + 1) ) {
-            this.levelSizes = this.sizes.slice().sort(( size1, size2 ) => size1.width - size2.width);
-            // Need to take into account that the list may or may not include the full resolution size
-            if( sizeLength === options.maxLevel ) {
-                this.levelSizes.push( {width: this.width, height: this.height} );
-            }
         }
     }
 
@@ -162,17 +147,17 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
      * this tile source.
      * @function
      * @param {Object|Array} data
-     * @param {String} [url] - url
+     * @param {String} optional - url
      */
 
     supports: function( data, url ) {
         // Version 2.0 and forwards
-        if (data.protocol && data.protocol === 'http://iiif.io/api/image') {
+        if (data.protocol && data.protocol == 'http://iiif.io/api/image') {
             return true;
         // Version 1.1
         } else if ( data['@context'] && (
-            data['@context'] === "http://library.stanford.edu/iiif/image-api/1.1/context.json" ||
-            data['@context'] === "http://iiif.io/api/image/1/context.json") ) {
+            data['@context'] == "http://library.stanford.edu/iiif/image-api/1.1/context.json" ||
+            data['@context'] == "http://iiif.io/api/image/1/context.json") ) {
             // N.B. the iiif.io context is wrong, but where the representation lives so likely to be used
             return true;
 
@@ -183,8 +168,8 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
         } else if ( data.identifier && data.width && data.height ) {
             return true;
         } else if ( data.documentElement &&
-            "info" === data.documentElement.tagName &&
-            "http://library.stanford.edu/iiif/image-api/ns/" ===
+            "info" == data.documentElement.tagName &&
+            "http://library.stanford.edu/iiif/image-api/ns/" ==
                 data.documentElement.namespaceURI) {
             return true;
 
@@ -195,43 +180,35 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
     },
 
     /**
-     * A static function used to prepare an incoming IIIF Image API info.json
-     * response for processing by the tile handler. Normalizes data for all
-     * versions of IIIF (1.0, 1.1, 2.x, 3.x) and returns a data object that
-     * may be passed to the IIIFTileSource.
      *
      * @function
-     * @static
      * @param {Object} data - the raw configuration
-     * @param {String} url - the url configuration was retrieved from
-     * @param {String} postData - HTTP POST data in k=v&k2=v2... form or null
-     * @returns {Object} A normalized IIIF data object
-     * @example <caption>IIIF 2.x Info Looks like this</caption>
+     * @example <caption>IIIF 1.1 Info Looks like this</caption>
      * {
-     * "@context": "http://iiif.io/api/image/2/context.json",
-     * "@id": "http://iiif.example.com/prefix/1E34750D-38DB-4825-A38A-B60A345E591C",
-     * "protocol": "http://iiif.io/api/image",
-     * "height": 1024,
-     * "width": 775,
-     * "tiles" : [{"width":256, "scaleFactors":[1,2,4,8]}],
-     *  "profile": ["http://iiif.io/api/image/2/level1.json", {
-     *    "qualities": [ "native", "bitonal", "grey", "color" ],
-     *    "formats": [ "jpg", "png", "gif" ]
-     *   }]
+     *   "@context" : "http://library.stanford.edu/iiif/image-api/1.1/context.json",
+     *   "@id" : "http://iiif.example.com/prefix/1E34750D-38DB-4825-A38A-B60A345E591C",
+     *   "width" : 6000,
+     *   "height" : 4000,
+     *   "scale_factors" : [ 1, 2, 4 ],
+     *   "tile_width" : 1024,
+     *   "tile_height" : 1024,
+     *   "formats" : [ "jpg", "png" ],
+     *   "qualities" : [ "native", "grey" ],
+     *   "profile" : "http://library.stanford.edu/iiif/image-api/1.1/compliance.html#level0"
      * }
      */
-    configure: function( data, url, postData ){
+    configure: function( data, url ){
         // Try to deduce our version and fake it upwards if needed
         if ( !$.isPlainObject(data) ) {
             var options = configureFromXml10( data );
             options['@context'] = "http://iiif.io/api/image/1.0/context.json";
-            options["@id"] = url.replace('/info.xml', '');
+            options['@id'] = url.replace('/info.xml', '');
             options.version = 1;
             return options;
         } else {
             if ( !data['@context'] ) {
                 data['@context'] = 'http://iiif.io/api/image/1.0/context.json';
-                data["@id"] = url.replace('/info.json', '');
+                data['@id'] = url.replace('/info.json', '');
                 data.version = 1;
             } else {
                 var context = data['@context'];
@@ -260,8 +237,10 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
                         $.console.error('Data has a @context property which contains no known IIIF context URI.');
                 }
             }
-
-            if (data.preferredFormats) {
+            if ( !data['@id'] && data['id'] ) {
+                data['@id'] = data['id'];
+            }
+            if(data.preferredFormats) {
                 for (var f = 0; f < data.preferredFormats.length; f++ ) {
                     if ( OpenSeadragon.imageFormatSupported(data.preferredFormats[f]) ) {
                         data.tileFormat = data.preferredFormats[f];
@@ -345,17 +324,7 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
             }
         }
 
-        // Use supplied list of scaled resolution sizes if these exist
-        if( this.levelSizes ) {
-            var levelSize = this.levelSizes[level];
-            var x = Math.ceil( levelSize.width / this.getTileWidth(level) ),
-                y = Math.ceil( levelSize.height / this.getTileHeight(level) );
-            return new $.Point( x, y );
-        }
-        // Otherwise call default TileSource->getNumTiles() function
-        else {
-            return $.TileSource.prototype.getNumTiles.call(this, level);
-        }
+        return $.TileSource.prototype.getNumTiles.call(this, level);
     },
 
 
@@ -370,34 +339,6 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
             return new $.Point(0, 0);
         }
 
-        // Use supplied list of scaled resolution sizes if these exist
-        if( this.levelSizes ) {
-
-            var validPoint = point.x >= 0 && point.x <= 1 &&
-                             point.y >= 0 && point.y <= 1 / this.aspectRatio;
-            $.console.assert(validPoint, "[TileSource.getTileAtPoint] must be called with a valid point.");
-
-            var widthScaled = this.levelSizes[level].width;
-            var pixelX = point.x * widthScaled;
-            var pixelY = point.y * widthScaled;
-
-            var x = Math.floor(pixelX / this.getTileWidth(level));
-            var y = Math.floor(pixelY / this.getTileHeight(level));
-
-            // When point.x == 1 or point.y == 1 / this.aspectRatio we want to
-            // return the last tile of the row/column
-            if (point.x >= 1) {
-                x = this.getNumTiles(level).x - 1;
-            }
-            var EPSILON = 1e-15;
-            if (point.y >= 1 / this.aspectRatio - EPSILON) {
-                y = this.getNumTiles(level).y - 1;
-            }
-
-            return new $.Point(x, y);
-        }
-
-        // Otherwise call default TileSource->getTileAtPoint() function
         return $.TileSource.prototype.getTileAtPoint.call(this, level, point);
     },
 
@@ -425,9 +366,10 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
         var IIIF_ROTATION = '0',
             //## get the scale (level as a decimal)
             scale = Math.pow( 0.5, this.maxLevel - level ),
+
             //# image dimensions at this level
-            levelWidth,
-            levelHeight,
+            levelWidth = Math.ceil( this.width * scale ),
+            levelHeight = Math.ceil( this.height * scale ),
 
             //## iiif region
             tileWidth,
@@ -445,21 +387,10 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
             iiifQuality,
             uri;
 
-        // Use supplied list of scaled resolution sizes if these exist
-        if( this.levelSizes ) {
-            levelWidth = this.levelSizes[level].width;
-            levelHeight = this.levelSizes[level].height;
-        }
-        // Otherwise calculate the sizes ourselves
-        else {
-            levelWidth = Math.ceil( this.width * scale );
-            levelHeight = Math.ceil( this.height * scale );
-        }
-
         tileWidth = this.getTileWidth(level);
         tileHeight = this.getTileHeight(level);
-        iiifTileSizeWidth = Math.round( tileWidth / scale );
-        iiifTileSizeHeight = Math.round( tileHeight / scale );
+        iiifTileSizeWidth = Math.ceil( tileWidth / scale );
+        iiifTileSizeHeight = Math.ceil( tileHeight / scale );
         if (this.version === 1) {
             iiifQuality = "native." + this.tileFormat;
         } else {
@@ -467,7 +398,7 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
         }
         if ( levelWidth < tileWidth && levelHeight < tileHeight ){
             if ( this.version === 2 && levelWidth === this.width ) {
-                iiifSize = "full";
+                iiifSize = "max";
             } else if ( this.version === 3 && levelWidth === this.width && levelHeight === this.height ) {
                 iiifSize = "max";
             } else if ( this.version === 3 ) {
@@ -486,10 +417,10 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
             } else {
                 iiifRegion = [ iiifTileX, iiifTileY, iiifTileW, iiifTileH ].join( ',' );
             }
-            iiifSizeW = Math.min( tileWidth, levelWidth - (x * tileWidth) );
-            iiifSizeH = Math.min( tileHeight, levelHeight - (y * tileHeight) );
+            iiifSizeW = Math.ceil( iiifTileW * scale );
+            iiifSizeH = Math.ceil( iiifTileH * scale );
             if ( this.version === 2 && iiifSizeW === this.width ) {
-                iiifSize = "full";
+                iiifSize = "max";
             } else if ( this.version === 3 && iiifSizeW === this.width && iiifSizeH === this.height ) {
                 iiifSize = "max";
             } else if (this.version === 3) {
@@ -498,7 +429,7 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
                 iiifSize = iiifSizeW + ",";
             }
         }
-        uri = [ this._id, iiifRegion, iiifSize, IIIF_ROTATION, iiifQuality ].join( '/' );
+        uri = [ this['@id'], iiifRegion, iiifSize, IIIF_ROTATION, iiifQuality ].join( '/' );
 
         return uri;
     },
@@ -513,11 +444,8 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
     /**
      * Determine whether arbitrary tile requests can be made against a service with the given profile
      * @function
-     * @param {Object} options
-     * @param {Array|String} options.profile
-     * @param {Number} options.version
-     * @param {String[]} options.extraFeatures
-     * @returns {Boolean}
+     * @param {array} profile - IIIF profile array
+     * @throws {Error}
      */
     function canBeTiled ( options ) {
         var level0Profiles = [
@@ -549,7 +477,7 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
         var levels = [];
         for(var i = 0; i < options.sizes.length; i++) {
             levels.push({
-                url: options._id + '/full/' + options.sizes[i].width + ',' +
+                url: options['@id'] + '/full/' + options.sizes[i].width + ',' +
                     (options.version === 3 ? options.sizes[i].height : '') +
                     '/0/default.' + options.tileFormat,
                 width: options.sizes[i].width,
@@ -572,7 +500,7 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
             rootName        = root.tagName,
             configuration   = null;
 
-        if ( rootName === "info" ) {
+        if ( rootName == "info" ) {
             try {
                 configuration = {};
                 parseXML10( root, configuration );
@@ -590,7 +518,7 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
     function parseXML10( node, configuration, property ) {
         var i,
             value;
-        if ( node.nodeType === 3 && property ) {//text node
+        if ( node.nodeType == 3 && property ) {//text node
             value = node.nodeValue.trim();
             if( value.match(/^\d*$/)){
                 value = Number( value );
@@ -603,7 +531,7 @@ $.extend( $.IIIFTileSource.prototype, $.TileSource.prototype, /** @lends OpenSea
                 }
                 configuration[ property ].push( value );
             }
-        } else if( node.nodeType === 1 ){
+        } else if( node.nodeType == 1 ){
             for( i = 0; i < node.childNodes.length; i++ ){
                 parseXML10( node.childNodes[ i ], configuration, node.nodeName );
             }

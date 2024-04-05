@@ -2,7 +2,7 @@
  * OpenSeadragon - getString/setString
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -82,8 +82,8 @@ $.extend( $, /** @lends OpenSeadragon */{
         }
         string = container[ props[ i ] ];
 
-        if ( typeof ( string ) !== "string" ) {
-            $.console.error( "Untranslated source string:", prop );
+        if ( typeof ( string ) != "string" ) {
+            $.console.log( "Untranslated source string:", prop );
             string = ""; // FIXME: this breaks gettext()-style convention, which would return source
         }
 

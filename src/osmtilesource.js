@@ -2,7 +2,7 @@
  * OpenSeadragon - OsmTileSource
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -113,7 +113,7 @@ $.extend( $.OsmTileSource.prototype, $.TileSource.prototype, /** @lends OpenSead
     supports: function( data, url ){
         return (
             data.type &&
-            "openstreetmaps" === data.type
+            "openstreetmaps" == data.type
         );
     },
 
@@ -122,11 +122,10 @@ $.extend( $.OsmTileSource.prototype, $.TileSource.prototype, /** @lends OpenSead
      * @function
      * @param {Object} data - the raw configuration
      * @param {String} url - the url the data was retrieved from if any.
-     * @param {String} postData - HTTP POST data in k=v&k2=v2... form or null
-     * @returns {Object} options - A dictionary of keyword arguments sufficient
+     * @return {Object} options - A dictionary of keyword arguments sufficient
      *      to configure this tile sources constructor.
      */
-    configure: function( data, url, postData ){
+    configure: function( data, url ){
         return data;
     },
 

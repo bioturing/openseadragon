@@ -2,7 +2,7 @@
  * OpenSeadragon - ControlDock
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -59,9 +59,7 @@
         if( this.element ){
             this.element = $.getElement( this.element );
             this.element.appendChild( this.container );
-            if( $.getElementStyle(this.element).position === 'static' ){
-                this.element.style.position = 'relative';
-            }
+            this.element.style.position = 'relative';
             this.container.style.width = '100%';
             this.container.style.height = '100%';
         }
@@ -151,7 +149,7 @@
 
         /**
          * @function
-         * @returns {OpenSeadragon.ControlDock} Chainable.
+         * @return {OpenSeadragon.ControlDock} Chainable.
          */
         removeControl: function ( element ) {
             element = $.getElement( element );
@@ -167,7 +165,7 @@
 
         /**
          * @function
-         * @returns {OpenSeadragon.ControlDock} Chainable.
+         * @return {OpenSeadragon.ControlDock} Chainable.
          */
         clearControls: function () {
             while ( this.controls.length > 0 ) {
@@ -180,7 +178,7 @@
 
         /**
          * @function
-         * @returns {Boolean}
+         * @return {Boolean}
          */
         areControlsEnabled: function () {
             var i;
@@ -197,7 +195,7 @@
 
         /**
          * @function
-         * @returns {OpenSeadragon.ControlDock} Chainable.
+         * @return {OpenSeadragon.ControlDock} Chainable.
          */
         setControlsEnabled: function( enabled ) {
             var i;
@@ -220,7 +218,7 @@
             i;
 
         for ( i = controls.length - 1; i >= 0; i-- ) {
-            if ( controls[ i ].element === element ) {
+            if ( controls[ i ].element == element ) {
                 return i;
             }
         }
