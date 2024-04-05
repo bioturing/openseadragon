@@ -814,18 +814,14 @@ $.TileSource.prototype = {
                             blb = bb.getBlob();
                         }
                     }
-                    // If the blob is empty for some reason consider the image load a failure.
-                    if (blb.size === 0) {
+                    if (!blb || blb.size === 0) {
                         finish("Empty image response.");
-                        self.finish(false);
+                    } else {
+                        image.src = (window.URL || window.webkitURL).createObjectURL(blb);
                     }
-                    // Create a URL for the blob data and make it the source of the image object.
-                    // This will still trigger Image.onload to indicate a successful tile load.
-                    image.src = (window.URL || window.webkitURL).createObjectURL(blb);
                 },
                 error: function(request) {
                     finish("Image load aborted - XHR error");
-                    self.finish(false);
                 }
             });
         } else {
