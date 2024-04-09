@@ -16,8 +16,8 @@
 
         },
         afterEach: function () {
-            if (viewer){
-                viewer.destroy();
+            if (viewer && viewer.close) {
+                viewer.close();
             }
 
             viewer = null;
@@ -53,9 +53,9 @@
             assert.ok(viewer.showZoomControl, 'showZoomControl should be on');
             assert.ok(!!viewer.zoomInButton, "zoomIn button should not be null");
             assert.ok(!!viewer.zoomOutButton, "zoomOut button should not be null");
-            assert.notEqual(viewer.buttonGroup.buttons.indexOf(viewer.zoomInButton), -1,
+            assert.notEqual(viewer.buttons.buttons.indexOf(viewer.zoomInButton), -1,
                 "The zoomIn button should be present");
-            assert.notEqual(viewer.buttonGroup.buttons.indexOf(viewer.zoomOutButton), -1,
+            assert.notEqual(viewer.buttons.buttons.indexOf(viewer.zoomOutButton), -1,
                 "The zoomOut button should be present");
 
             var oldZoom = viewer.viewport.getZoom();
@@ -108,7 +108,7 @@
             viewer.removeHandler('open', openHandler);
             assert.ok(viewer.showHomeControl, 'showHomeControl should be on');
             assert.ok(!!viewer.homeButton, "Home button should not be null");
-            assert.notEqual(viewer.buttonGroup.buttons.indexOf(viewer.homeButton), -1,
+            assert.notEqual(viewer.buttons.buttons.indexOf(viewer.homeButton), -1,
                 "The home button should be present");
 
             viewer.viewport.zoomBy(1.1);
@@ -167,7 +167,7 @@
             viewer.removeHandler('open', openHandler);
             assert.ok(viewer.showHomeControl, 'showFullPageControl should be on');
             assert.ok(!!viewer.fullPageButton, "FullPage button should not be null");
-            assert.notEqual(viewer.buttonGroup.buttons.indexOf(viewer.fullPageButton), -1,
+            assert.notEqual(viewer.buttons.buttons.indexOf(viewer.fullPageButton), -1,
                 "The full page button should be present");
 
             assert.ok(!viewer.isFullPage(), "OSD should not be in full page.");
@@ -223,18 +223,18 @@
             assert.ok(viewer.drawer, 'Drawer exists');
             assert.ok(viewer.drawer.canRotate(), 'drawer.canRotate needs to be true');
             assert.ok(viewer.showRotationControl, 'showRotationControl should be true');
-            assert.notEqual(viewer.buttonGroup.buttons.indexOf(viewer.rotateLeftButton), -1,
+            assert.notEqual(viewer.buttons.buttons.indexOf(viewer.rotateLeftButton), -1,
                 "rotateLeft should be found");
-            assert.notEqual(viewer.buttonGroup.buttons.indexOf(viewer.rotateRightButton), -1,
+            assert.notEqual(viewer.buttons.buttons.indexOf(viewer.rotateRightButton), -1,
                 "rotateRight should be found");
 
             // Now simulate the left/right button clicks.
             // TODO: re-factor simulateViewerClickWithDrag so it'll accept any element, and use that.
-            assert.equal(viewer.viewport.getRotation(), 0, "Image should start at 0 degrees rotation");
+            assert.equal(viewer.viewport.degrees, 0, "Image should start at 0 degrees rotation");
             viewer.rotateLeftButton.onRelease();
-            assert.equal(viewer.viewport.getRotation(), -90, "Image should be -90 degrees rotation (left)");
+            assert.equal(viewer.viewport.degrees, 270, "Image should be 270 degrees rotation (left)");
             viewer.rotateRightButton.onRelease();
-            assert.equal(viewer.viewport.getRotation(), 0, "Image should be 0 degrees rotation (right)");
+            assert.equal(viewer.viewport.degrees, 0, "Image should be 270 degrees rotation (right)");
 
             viewer.close();
             done();

@@ -2,7 +2,7 @@
  * OpenSeadragon - full-screen support functions
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -67,14 +67,10 @@
             return document.fullscreenElement;
         };
         fullScreenApi.requestFullScreen = function( element ) {
-            return element.requestFullscreen().catch(function (msg) {
-                $.console.error('Fullscreen request failed: ', msg);
-            });
+            return element.requestFullscreen();
         };
         fullScreenApi.exitFullScreen = function() {
-            document.exitFullscreen().catch(function (msg) {
-                $.console.error('Error while exiting fullscreen: ', msg);
-            });
+            document.exitFullscreen();
         };
         fullScreenApi.fullScreenEventName = "fullscreenchange";
         fullScreenApi.fullScreenErrorEventName = "fullscreenerror";

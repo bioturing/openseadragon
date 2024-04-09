@@ -2,7 +2,7 @@
  * OpenSeadragon - Tile
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -44,19 +44,16 @@
  *      coordinates.
  * @param {Boolean} exists Is this tile a part of a sparse image? ( Also has
  *      this tile failed to load? )
- * @param {String|Function} url The URL of this tile's image or a function that returns a url.
+ * @param {String} url The URL of this tile's image.
  * @param {CanvasRenderingContext2D} context2D The context2D of this tile if it
- *      is provided directly by the tile source.
+ * is provided directly by the tile source.
  * @param {Boolean} loadWithAjax Whether this tile image should be loaded with an AJAX request .
  * @param {Object} ajaxHeaders The headers to send with this tile's AJAX request (if applicable).
  * @param {OpenSeadragon.Rect} sourceBounds The portion of the tile to use as the source of the
- *      drawing operation, in pixels. Note that this only works when drawing with canvas; when drawing
- *      with HTML the entire tile is always used.
- * @param {String} postData HTTP POST data (usually but not necessarily in k=v&k2=v2... form,
- *      see TileSource::getPostData) or null
- * @param {String} cacheKey key to act as a tile cache, must be unique for tiles with unique image data
+ * drawing operation, in pixels. Note that this only works when drawing with canvas; when drawing
+ * with HTML the entire tile is always used.
  */
-$.Tile = function(level, x, y, bounds, exists, url, context2D, loadWithAjax, ajaxHeaders, sourceBounds, postData, cacheKey) {
+$.Tile = function(level, x, y, bounds, exists, url, context2D, loadWithAjax, ajaxHeaders, sourceBounds) {
     /**
      * The zoom level this tile belongs to.
      * @member {Number} level
@@ -82,17 +79,11 @@ $.Tile = function(level, x, y, bounds, exists, url, context2D, loadWithAjax, aja
      */
     this.bounds  = bounds;
     /**
-     * Where this tile fits, in normalized coordinates, after positioning
-     * @member {OpenSeadragon.Rect} positionedBounds
-     * @memberof OpenSeadragon.Tile#
-     */
-    this.positionedBounds  = new OpenSeadragon.Rect(bounds.x, bounds.y, bounds.width, bounds.height);
-    /**
-     * The portion of the tile to use as the source of the drawing operation, in pixels. Note that
-     * this only works when drawing with canvas; when drawing with HTML the entire tile is always used.
-     * @member {OpenSeadragon.Rect} sourceBounds
-     * @memberof OpenSeadragon.Tile#
-     */
+    * The portion of the tile to use as the source of the drawing operation, in pixels. Note that
+    * this only works when drawing with canvas; when drawing with HTML the entire tile is always used.
+    * @member {OpenSeadragon.Rect} sourceBounds
+    * @memberof OpenSeadragon.Tile#
+    */
     this.sourceBounds = sourceBounds;
     /**
      * Is this tile a part of a sparse image? Also has this tile failed to load?
@@ -101,21 +92,11 @@ $.Tile = function(level, x, y, bounds, exists, url, context2D, loadWithAjax, aja
      */
     this.exists  = exists;
     /**
-     * Private property to hold string url or url retriever function.
-     * Consumers should access via Tile.getUrl()
-     * @private
-     * @member {String|Function} url
+     * The URL of this tile's image.
+     * @member {String} url
      * @memberof OpenSeadragon.Tile#
      */
-    this._url     = url;
-    /**
-     * Post parameters for this tile. For example, it can be an URL-encoded string
-     * in k1=v1&k2=v2... format, or a JSON, or a FormData instance... or null if no POST request used
-     * @member {String} postData HTTP POST data (usually but not necessarily in k=v&k2=v2... form,
-     *      see TileSource::getPostData) or null
-     * @memberof OpenSeadragon.Tile#
-     */
-    this.postData  = postData;
+    this.url     = url;
     /**
      * The context2D of this tile if it is provided directly by the tile source.
      * @member {CanvasRenderingContext2D} context2D
@@ -135,18 +116,16 @@ $.Tile = function(level, x, y, bounds, exists, url, context2D, loadWithAjax, aja
      * @memberof OpenSeadragon.Tile#
      */
     this.ajaxHeaders = ajaxHeaders;
-
-    if (cacheKey === undefined) {
-        $.console.warn("Tile constructor needs 'cacheKey' variable: creation tile cache" +
-            " in Tile class is deprecated. TileSource.prototype.getTileHashKey will be used.");
-        cacheKey = $.TileSource.prototype.getTileHashKey(level, x, y, url, ajaxHeaders, postData);
-    }
     /**
      * The unique cache key for this tile.
      * @member {String} cacheKey
      * @memberof OpenSeadragon.Tile#
      */
-    this.cacheKey = cacheKey;
+    if (this.ajaxHeaders) {
+        this.cacheKey = this.url + "+" + JSON.stringify(this.ajaxHeaders);
+    } else {
+        this.cacheKey = this.url;
+    }
     /**
      * Is this tile loaded?
      * @member {Boolean} loaded
@@ -172,6 +151,12 @@ $.Tile = function(level, x, y, bounds, exists, url, context2D, loadWithAjax, aja
      * @memberof OpenSeadragon.Tile#
      */
     this.imgElement = null;
+    /**
+     * The Image object for this tile.
+     * @member {Object} image
+     * @memberof OpenSeadragon.Tile#
+     */
+    this.image      = null;
 
     /**
      * The alias of this.element.style.
@@ -191,12 +176,6 @@ $.Tile = function(level, x, y, bounds, exists, url, context2D, loadWithAjax, aja
      * @memberof OpenSeadragon.Tile#
      */
     this.size       = null;
-    /**
-     * Whether to flip the tile when rendering.
-     * @member {Boolean} flipped
-     * @memberof OpenSeadragon.Tile#
-     */
-    this.flipped    = false;
     /**
      * The start time of this tile's blending.
      * @member {Number} blendStart
@@ -223,13 +202,6 @@ $.Tile = function(level, x, y, bounds, exists, url, context2D, loadWithAjax, aja
      * @memberof OpenSeadragon.Tile#
      */
     this.visibility = null;
-
-    /**
-     * The transparency indicator of this tile.
-     * @member {Boolean} hasTransparency true if tile contains transparency for correct rendering
-     * @memberof OpenSeadragon.Tile#
-     */
-    this.hasTransparency = false;
 
     /**
      * Whether this tile is currently being drawn.
@@ -275,68 +247,154 @@ $.Tile.prototype = {
 
     // private
     _hasTransparencyChannel: function() {
-        console.warn("Tile.prototype._hasTransparencyChannel() has been " +
-            "deprecated and will be removed in the future. Use TileSource.prototype.hasTransparency() instead.");
-        return !!this.context2D || this.getUrl().match('.png');
+        return !!this.context2D || this.url.match('.png');
     },
 
     /**
-     * The Image object for this tile.
-     * @member {Object} image
-     * @memberof OpenSeadragon.Tile#
-     * @deprecated
-     * @returns {Image}
+     * Renders the tile in an html container.
+     * @function
+     * @param {Element} container
      */
-    get image() {
-        $.console.error("[Tile.image] property has been deprecated. Use [Tile.prototype.getImage] instead.");
-        return this.getImage();
-    },
-
-    /**
-     * The URL of this tile's image.
-     * @member {String} url
-     * @memberof OpenSeadragon.Tile#
-     * @deprecated
-     * @returns {String}
-     */
-    get url() {
-        $.console.error("[Tile.url] property has been deprecated. Use [Tile.prototype.getUrl] instead.");
-        return this.getUrl();
-    },
-
-    /**
-     * Get the Image object for this tile.
-     * @returns {Image}
-     */
-    getImage: function() {
-        return this.cacheImageRecord.getImage();
-    },
-
-    /**
-     * Get the url string for this tile.
-     * @returns {String}
-     */
-    getUrl: function() {
-        if (typeof this._url === 'function') {
-            return this._url();
+    drawHTML: function( container ) {
+        if (!this.cacheImageRecord) {
+            $.console.warn(
+                '[Tile.drawHTML] attempting to draw tile %s when it\'s not cached',
+                this.toString());
+            return;
         }
 
-        return this._url;
+        if ( !this.loaded ) {
+            $.console.warn(
+                "Attempting to draw tile %s when it's not yet loaded.",
+                this.toString()
+            );
+            return;
+        }
+
+        //EXPERIMENTAL - trying to figure out how to scale the container
+        //               content during animation of the container size.
+
+        if ( !this.element ) {
+            this.element                              = $.makeNeutralElement( "div" );
+            this.imgElement                           = this.cacheImageRecord.getImage().cloneNode();
+            this.imgElement.style.msInterpolationMode = "nearest-neighbor";
+            this.imgElement.style.width               = "100%";
+            this.imgElement.style.height              = "100%";
+
+            this.style                     = this.element.style;
+            this.style.position            = "absolute";
+        }
+        if ( this.element.parentNode != container ) {
+            container.appendChild( this.element );
+        }
+        if ( this.imgElement.parentNode != this.element ) {
+            this.element.appendChild( this.imgElement );
+        }
+
+        this.style.top     = this.position.y + "px";
+        this.style.left    = this.position.x + "px";
+        this.style.height  = this.size.y + "px";
+        this.style.width   = this.size.x + "px";
+
+        $.setElementOpacity( this.element, this.opacity );
     },
 
     /**
-     * Get the CanvasRenderingContext2D instance for tile image data drawn
-     * onto Canvas if enabled and available
-     * @returns {CanvasRenderingContext2D}
+     * Renders the tile in a canvas-based context.
+     * @function
+     * @param {Canvas} context
+     * @param {Function} drawingHandler - Method for firing the drawing event.
+     * drawingHandler({context, tile, rendered})
+     * where <code>rendered</code> is the context with the pre-drawn image.
+     * @param {Number} [scale=1] - Apply a scale to position and size
+     * @param {OpenSeadragon.Point} [translate] - A translation vector
      */
-    getCanvasContext: function() {
-        return this.context2D || (this.cacheImageRecord && this.cacheImageRecord.getRenderedContext());
+    drawCanvas: function( context, drawingHandler, scale, translate ) {
+
+        var position = this.position.times($.pixelDensityRatio),
+            size     = this.size.times($.pixelDensityRatio),
+            rendered;
+
+        if (!this.context2D && !this.cacheImageRecord) {
+            $.console.warn(
+                '[Tile.drawCanvas] attempting to draw tile %s when it\'s not cached',
+                this.toString());
+            return;
+        }
+
+        rendered = this.context2D || this.cacheImageRecord.getRenderedContext();
+
+        if ( !this.loaded || !rendered ){
+            $.console.warn(
+                "Attempting to draw tile %s when it's not yet loaded.",
+                this.toString()
+            );
+
+            return;
+        }
+
+        context.save();
+
+        context.globalAlpha = this.opacity;
+
+        if (typeof scale === 'number' && scale !== 1) {
+            // draw tile at a different scale
+            position = position.times(scale);
+            size = size.times(scale);
+        }
+
+        if (translate instanceof $.Point) {
+            // shift tile position slightly
+            position = position.plus(translate);
+        }
+
+        //if we are supposed to be rendering fully opaque rectangle,
+        //ie its done fading or fading is turned off, and if we are drawing
+        //an image with an alpha channel, then the only way
+        //to avoid seeing the tile underneath is to clear the rectangle
+        if (context.globalAlpha === 1 && this._hasTransparencyChannel()) {
+            //clearing only the inside of the rectangle occupied
+            //by the png prevents edge flikering
+            context.clearRect(
+                position.x,
+                position.y,
+                size.x,
+                size.y
+            );
+        }
+
+        // This gives the application a chance to make image manipulation
+        // changes as we are rendering the image
+        drawingHandler({context: context, tile: this, rendered: rendered});
+
+        var sourceWidth, sourceHeight;
+        if (this.sourceBounds) {
+            sourceWidth = Math.min(this.sourceBounds.width, rendered.canvas.width);
+            sourceHeight = Math.min(this.sourceBounds.height, rendered.canvas.height);
+        } else {
+            sourceWidth = rendered.canvas.width;
+            sourceHeight = rendered.canvas.height;
+        }
+
+        context.drawImage(
+            rendered.canvas,
+            0,
+            0,
+            sourceWidth,
+            sourceHeight,
+            position.x,
+            position.y,
+            size.x,
+            size.y
+        );
+
+        context.restore();
     },
 
     /**
      * Get the ratio between current and original size.
      * @function
-     * @returns {Float}
+     * @return {Float}
      */
     getScaleForEdgeSmoothing: function() {
         var context;
@@ -358,7 +416,7 @@ $.Tile.prototype = {
      * Needed to avoid swimming and twitching.
      * @function
      * @param {Number} [scale=1] - Scale to be applied to position.
-     * @returns {OpenSeadragon.Point}
+     * @return {OpenSeadragon.Point}
      */
     getTranslationForEdgeSmoothing: function(scale, canvasSize, sketchCanvasSize) {
         // The translation vector must have positive values, otherwise the image goes a bit off

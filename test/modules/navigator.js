@@ -1,5 +1,4 @@
-/* eslint-disable new-cap */
-/* global QUnit, Util, $ */
+/* global QUnit, module, Util, $, console */
 
 (function () {
     var debug = false,
@@ -41,12 +40,6 @@
             }
 
             resetTestVariables();
-
-            if (viewer){
-                viewer.destroy();
-            }
-
-            viewer = null;
         }
     });
 
@@ -223,39 +216,30 @@
                 clientY: offset.top + locationY
             };
         $canvas
-            .simulate('mouseenter', event)
+            .simulate(OpenSeadragon.MouseTracker.haveMouseEnter ? 'mouseenter' : 'mouseover', event)
             .simulate('mousedown', event)
             .simulate('mouseup', event);
     };
 
     var simulateNavigatorDrag = function (viewer, distanceX, distanceY) {
-        var $canvas = $(viewer.element).find('.openseadragon-canvas'),
-            offset = $canvas.offset(),
-            event = {};
-
-        event.clientX = offset.left + 1;
-        event.clientY = offset.top + 1;
-        $canvas.simulate( 'mouseenter', event );
-
-        event.button = 0;
-        $canvas.simulate( 'mousedown', event );
-
-        event.clientX += distanceX;
-        event.clientY += distanceY;
-        $canvas.simulate( 'mousemove', event );
-
-        event.button = 0;
-        $canvas.simulate( 'mouseup', event );
-
-        event.clientX = offset.left - 1;
-        event.clientY = offset.top - 1;
-        event.relatedTarget = document.body;
-        $canvas.simulate( 'mouseleave', event );
+        var $canvas = $(viewer.element).find('.displayregion'),
+            event = {
+                dx: Math.floor(distanceX),
+                dy: Math.floor(distanceY)
+            };
+        $canvas
+            .simulate('drag', event);
     };
 
     var dragNavigatorBackToCenter = function () {
-        var delta = viewer.viewport.getHomeBounds().getCenter().minus(viewer.viewport.getCenter()).times(displayRegionWidth);
-        simulateNavigatorDrag(viewer.navigator, delta.x, delta.y);
+        var start = viewer.viewport.getBounds().getTopLeft(),
+            target = new OpenSeadragon.Point(0.5 - viewer.viewport.getBounds().width / 2,
+                     1 / viewer.source.aspectRatio / 2 - viewer.viewport.getBounds().height / 2),
+            delta = target.minus(start);
+        if (viewer.source.aspectRatio < 1) {
+                delta.y *= viewer.source.aspectRatio;
+        }
+        simulateNavigatorDrag(viewer.navigator, delta.x * displayRegionWidth, delta.y * displayRegionHeight);
     };
 
     var resizeElement = function ($element, width, height) {
@@ -464,7 +448,7 @@
                 }
                 else {
                     // Navigator hosted in viewer
-                    if (seadragonProperties.navigatorPosition && seadragonProperties.navigatorPosition === 'ABSOLUTE') {
+                    if (seadragonProperties.navigatorPosition && seadragonProperties.navigatorPosition == 'ABSOLUTE') {
                         // Navigator positioned 'ABSOLUTE'...size shouldn't change
 
                         assessNavigatorSize(

@@ -5,23 +5,15 @@
     // This module tests whether our various file formats can be opened.
     // TODO: Add more file formats (with corresponding test data).
 
-    var viewer = null;
-
     QUnit.module('Formats', {
         beforeEach: function () {
             var example = document.createElement("div");
             example.id = "example";
             document.getElementById("qunit-fixture").appendChild(example);
-        },
-        afterEach: function () {
-            if (viewer){
-                viewer.destroy();
-            }
-
-            viewer = null;
         }
     });
 
+    var viewer = null;
 
     // ----------
     var testOpenUrl = function(relativeUrl, assert) {
@@ -42,12 +34,12 @@
         var openHandler = function(event) {
             viewer.removeHandler('open', openHandler);
             assert.ok(true, 'Open event was sent');
-            viewer.addHandler('tiled-image-drawn', tileDrawnHandler);
+            viewer.addHandler('tile-drawn', tileDrawnHandler);
         };
 
         var tileDrawnHandler = function(event) {
-            viewer.removeHandler('tiled-image-drawn', tileDrawnHandler);
-            assert.ok(true, 'A tiled image has been drawn');
+            viewer.removeHandler('tile-drawn', tileDrawnHandler);
+            assert.ok(true, 'A tile has been drawn');
             viewer.addHandler('close', closeHandler);
             viewer.close();
         };
@@ -157,20 +149,6 @@
             '    }' +
             '  ]' +
             '}', assert);
-    });
-
-    QUnit.test('IIIF 3.0 JSON', function(assert) {
-        testOpenUrl('iiif_3_0_tiled/info.json', assert);
-    });
-
-    // ----------
-    QUnit.test('IIIF 3.0 JSON scaleFactors [1]', function(assert) {
-        testOpenUrl('iiif_3_0_tiled_sf1/info.json', assert);
-    });
-
-    // ----------
-    QUnit.test('IIIF 3.0 JSON, sizes array only', function(assert) {
-        testOpenUrl('iiif_3_0_sizes/info.json', assert);
     });
 
     // ----------

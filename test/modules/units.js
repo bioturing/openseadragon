@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 /* global QUnit, $, Util, testLog */
 
 (function () {
@@ -11,7 +10,6 @@
 
             testLog.reset();
 
-            // eslint-disable-next-line new-cap
             viewer = OpenSeadragon({
                 id: 'unitsexample',
                 prefixUrl: '/build/openseadragon/images/',
@@ -19,8 +17,8 @@
             });
         },
         afterEach: function () {
-            if (viewer){
-                viewer.destroy();
+            if (viewer && viewer.close) {
+                viewer.close();
             }
 
             viewer = null;
@@ -212,13 +210,13 @@
                 checkPoint(assert, ' after zoom and pan');
 
                 //Restore rotation
-                viewer.viewport.setRotation(0, true);
+                viewer.viewport.setRotation(0);
                 done();
             });
             viewer.viewport.zoomTo(0.8).panTo(new OpenSeadragon.Point(0.1, 0.2));
         });
 
-        viewer.viewport.setRotation(45, true);
+        viewer.viewport.setRotation(45);
         viewer.open([{
                 tileSource: "/test/data/testpattern.dzi"
             }, {

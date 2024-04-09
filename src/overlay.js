@@ -2,7 +2,7 @@
  * OpenSeadragon - Overlay
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -288,7 +288,10 @@
                         style[transformProp] = "";
                     }
                 }
-                style.display = 'block';
+
+                if (style.display !== 'none') {
+                    style.display = 'block';
+                }
             }
         },
 
@@ -299,18 +302,18 @@
             this.adjust(position, size);
 
             var rotate = 0;
-            if (viewport.getRotation(true) &&
+            if (viewport.degrees &&
                 this.rotationMode !== $.OverlayRotationMode.NO_ROTATION) {
                 // BOUNDING_BOX is only valid if both directions get scaled.
                 // Get replaced by EXACT otherwise.
                 if (this.rotationMode === $.OverlayRotationMode.BOUNDING_BOX &&
                     this.width !== null && this.height !== null) {
                     var rect = new $.Rect(position.x, position.y, size.x, size.y);
-                    var boundingBox = this._getBoundingBox(rect, viewport.getRotation(true));
+                    var boundingBox = this._getBoundingBox(rect, viewport.degrees);
                     position = boundingBox.getTopLeft();
                     size = boundingBox.getSize();
                 } else {
-                    rotate = viewport.getRotation(true);
+                    rotate = viewport.degrees;
                 }
             }
 
@@ -447,7 +450,7 @@
         // private
         _adjustBoundsForRotation: function(viewport, bounds) {
             if (!viewport ||
-                viewport.getRotation(true) === 0 ||
+                viewport.degrees === 0 ||
                 this.rotationMode === $.OverlayRotationMode.EXACT) {
                 return bounds;
             }
@@ -467,7 +470,7 @@
             }
 
             // NO_ROTATION case
-            return bounds.rotate(-viewport.getRotation(true),
+            return bounds.rotate(-viewport.degrees,
                 this._getPlacementPoint(bounds));
         }
     };

@@ -2,7 +2,7 @@
  * OpenSeadragon - TileCache
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -46,20 +46,41 @@ var TileRecord = function( options ) {
 // private class
 var ImageRecord = function(options) {
     $.console.assert( options, "[ImageRecord] options is required" );
-    $.console.assert( options.data, "[ImageRecord] options.data is required" );
+    $.console.assert( options.image, "[ImageRecord] options.image is required" );
+    this._image = options.image;
     this._tiles = [];
-
-    options.create.apply(null, [this, options.data, options.ownerTile]);
-    this._destroyImplementation = options.destroy.bind(null, this);
-    this.getImage = options.getImage.bind(null, this);
-    this.getData = options.getData.bind(null, this);
-    this.getRenderedContext = options.getRenderedContext.bind(null, this);
 };
 
 ImageRecord.prototype = {
     destroy: function() {
-        this._destroyImplementation();
+        this._image = null;
+        this._renderedContext = null;
         this._tiles = null;
+    },
+
+    getImage: function() {
+        return this._image;
+    },
+
+    getRenderedContext: function() {
+        if (!this._renderedContext) {
+            var canvas = document.createElement( 'canvas' );
+            canvas.width = this._image.width;
+            canvas.height = this._image.height;
+            this._renderedContext = canvas.getContext('2d');
+            this._renderedContext.drawImage( this._image, 0, 0 );
+            //since we are caching the prerendered image on a canvas
+            //allow the image to not be held in memory
+            this._image = null;
+        }
+        return this._renderedContext;
+    },
+
+    setRenderedContext: function(renderedContext) {
+        $.console.error("ImageRecord.setRenderedContext is deprecated. " +
+                "The rendered context should be created by the ImageRecord " +
+                "itself when calling ImageRecord.getRenderedContext.");
+        this._renderedContext = renderedContext;
     },
 
     addTile: function(tile) {
@@ -137,22 +158,9 @@ $.TileCache.prototype = {
 
         var imageRecord = this._imagesLoaded[options.tile.cacheKey];
         if (!imageRecord) {
-
-            if (!options.data) {
-                $.console.error("[TileCache.cacheTile] options.image was renamed to options.data. '.image' attribute " +
-                    "has been deprecated and will be removed in the future.");
-                options.data = options.image;
-            }
-
-            $.console.assert( options.data, "[TileCache.cacheTile] options.data is required to create an ImageRecord" );
+            $.console.assert( options.image, "[TileCache.cacheTile] options.image is required to create an ImageRecord" );
             imageRecord = this._imagesLoaded[options.tile.cacheKey] = new ImageRecord({
-                data: options.data,
-                ownerTile: options.tile,
-                create: options.tiledImage.source.createTileCache,
-                destroy: options.tiledImage.source.destroyTileCache,
-                getImage: options.tiledImage.source.getTileCacheDataAsImage,
-                getData: options.tiledImage.source.getTileCacheData,
-                getRenderedContext: options.tiledImage.source.getTileCacheDataAsContext2D,
+                image: options.image
             });
 
             this._imagesLoadedCount++;
@@ -188,7 +196,7 @@ $.TileCache.prototype = {
                 worstLevel  = worstTile.level;
 
                 if ( prevTime < worstTime ||
-                    ( prevTime === worstTime && prevLevel > worstLevel ) ) {
+                   ( prevTime == worstTime && prevLevel > worstLevel ) ) {
                     worstTile       = prevTile;
                     worstTileIndex  = i;
                     worstTileRecord = prevTileRecord;
@@ -236,51 +244,19 @@ $.TileCache.prototype = {
         var tile = tileRecord.tile;
         var tiledImage = tileRecord.tiledImage;
 
-        // tile.getCanvasContext should always exist in normal usage (with $.Tile)
-        // but the tile cache test passes in a dummy object
-        let context2D = tile.getCanvasContext && tile.getCanvasContext();
-
         tile.unload();
         tile.cacheImageRecord = null;
 
         var imageRecord = this._imagesLoaded[tile.cacheKey];
-        if(!imageRecord){
-            return;
-        }
         imageRecord.removeTile(tile);
         if (!imageRecord.getTileCount()) {
-
             imageRecord.destroy();
             delete this._imagesLoaded[tile.cacheKey];
             this._imagesLoadedCount--;
-
-            if(context2D){
-                /**
-                 * Free up canvas memory
-                 * (iOS 12 or higher on 2GB RAM device has only 224MB canvas memory,
-                 * and Safari keeps canvas until its height and width will be set to 0).
-                 */
-                context2D.canvas.width = 0;
-                context2D.canvas.height = 0;
-
-                /**
-                 * Triggered when an image has just been unloaded
-                 *
-                 * @event image-unloaded
-                 * @memberof OpenSeadragon.Viewer
-                 * @type {object}
-                 * @property {CanvasRenderingContext2D} context2D - The context that is being unloaded
-                 */
-                tiledImage.viewer.raiseEvent("image-unloaded", {
-                    context2D: context2D,
-                    tile: tile
-                });
-            }
-
         }
 
         /**
-         * Triggered when a tile has just been unloaded from the cache.
+         * Triggered when a tile has just been unloaded from memory.
          *
          * @event tile-unloaded
          * @memberof OpenSeadragon.Viewer
@@ -292,7 +268,6 @@ $.TileCache.prototype = {
             tile: tile,
             tiledImage: tiledImage
         });
-
     }
 };
 

@@ -2,7 +2,7 @@
  * OpenSeadragon - Spring
  *
  * Copyright (C) 2009 CodePlex Foundation
- * Copyright (C) 2010-2024 OpenSeadragon contributors
+ * Copyright (C) 2010-2013 OpenSeadragon contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -50,11 +50,11 @@
 $.Spring = function( options ) {
     var args = arguments;
 
-    if( typeof ( options ) !== 'object' ){
+    if( typeof ( options ) != 'object' ){
         //allows backward compatible use of ( initialValue, config ) as
         //constructor parameters
         options = {
-            initial: args.length && typeof ( args[ 0 ] ) === "number" ?
+            initial: args.length && typeof ( args[ 0 ] ) == "number" ?
                 args[ 0 ] :
                 undefined,
             /**
@@ -96,7 +96,7 @@ $.Spring = function( options ) {
      * @property {Number} time
      */
     this.current = {
-        value: typeof ( this.initial ) === "number" ?
+        value: typeof ( this.initial ) == "number" ?
             this.initial :
             (this._exponential ? 0 : 1),
         time:  $.now() // always work in milliseconds
@@ -206,13 +206,12 @@ $.Spring.prototype = {
 
     /**
      * @function
-     * @returns true if the spring is still updating its value, false if it is
-     * already at the target value.
+     * @returns true if the value got updated, false otherwise
      */
     update: function() {
         this.current.time  = $.now();
 
-        let startValue, targetValue;
+        var startValue, targetValue;
         if (this._exponential) {
             startValue = this.start._logValue;
             targetValue = this.target._logValue;
@@ -221,25 +220,24 @@ $.Spring.prototype = {
             targetValue = this.target.value;
         }
 
-        if(this.current.time >= this.target.time){
-            this.current.value = this.target.value;
-        } else {
-            let currentValue = startValue +
-                    ( targetValue - startValue ) *
-                    transform(
-                        this.springStiffness,
-                        ( this.current.time - this.start.time ) /
-                        ( this.target.time - this.start.time )
-                    );
+        var currentValue = (this.current.time >= this.target.time) ?
+            targetValue :
+            startValue +
+                ( targetValue - startValue ) *
+                transform(
+                    this.springStiffness,
+                    ( this.current.time - this.start.time ) /
+                    ( this.target.time - this.start.time )
+                );
 
-            if (this._exponential) {
-                this.current.value = Math.exp(currentValue);
-            } else {
-                this.current.value = currentValue;
-            }
+        var oldValue = this.current.value;
+        if (this._exponential) {
+            this.current.value = Math.exp(currentValue);
+        } else {
+            this.current.value = currentValue;
         }
 
-        return this.current.value !== this.target.value;
+        return oldValue != this.current.value;
     },
 
     /**

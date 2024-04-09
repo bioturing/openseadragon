@@ -1,5 +1,4 @@
-/* eslint-disable new-cap */
-/* global QUnit, $, Util, testLog */
+/* global QUnit, $, Util, testLog, console */
 
 (function () {
     var viewer;
@@ -21,8 +20,8 @@
             });
         },
         afterEach: function () {
-            if (viewer){
-                viewer.destroy();
+            if (viewer && viewer.close) {
+                viewer.close();
             }
 
             viewer = null;
@@ -59,8 +58,7 @@
     // values for zoom levels, and reopen the viewer for each iteration.
     var reopenViewerHelper = function(assert, config) {
         var done = assert.async();
-        var expected, level, actual;
-        var i = 0;
+        var expected, level, actual, i = 0;
         var openHandler = function(event) {
             var viewport = viewer.viewport;
             expected = config.processExpected(level, expected);
@@ -80,9 +78,6 @@
                     springStiffness: SPRING_STIFFNESS
                 };
 
-                if (viewer){
-                    viewer.destroy();
-                }
                 viewerConfig[config.property] = level;
                 viewer = OpenSeadragon(viewerConfig);
                 viewer.addOnceHandler('open', openHandler);
@@ -99,10 +94,6 @@
         };
 
         viewerConfig[config.property] = level;
-
-        if (viewer){
-            viewer.destroy();
-        }
         viewer = OpenSeadragon(viewerConfig);
         viewer.addOnceHandler('open', openHandler);
         viewer.open(DZI_PATH);
@@ -254,7 +245,7 @@
         function openHandler() {
             viewer.removeHandler('open', openHandler);
             var viewport = viewer.viewport;
-            viewport.setRotation(-675, true);
+            viewport.setRotation(-675);
             Util.assertRectangleEquals(
                 assert,
                 viewport.getHomeBoundsNoRotate(),
@@ -276,7 +267,7 @@
         function openHandler() {
             viewer.removeHandler('open', openHandler);
             var viewport = viewer.viewport;
-            viewport.setRotation(-675, true);
+            viewport.setRotation(-675);
             Util.assertRectangleEquals(
                 assert,
                 viewport.getHomeBounds(),
@@ -379,9 +370,6 @@
             );
             i++;
             if (i < testZoomLevels.length) {
-                if (viewer){
-                    viewer.destroy();
-                }
                 viewer = OpenSeadragon({
                     id: VIEWER_ID,
                     prefixUrl: PREFIX_URL,
@@ -395,9 +383,6 @@
                 done();
             }
         };
-        if (viewer){
-            viewer.destroy();
-        }
         viewer = OpenSeadragon({
             id: VIEWER_ID,
             prefixUrl: PREFIX_URL,
@@ -531,7 +516,7 @@
             var bounds = viewport.getBounds();
             Util.assertRectangleEquals(
                 assert,
-                new OpenSeadragon.Rect(0, 1, 2, 2),
+                new OpenSeadragon.Rect(-0.5, 1, 2, 2),
                 bounds,
                 EPSILON,
                 "Viewport.applyConstraints should move viewport to the center, not to a side.");
@@ -546,14 +531,14 @@
         var openHandler = function() {
             viewer.removeHandler('open', openHandler);
             var viewport = viewer.viewport;
-            viewport.setRotation(45, true);
+            viewport.setRotation(45);
             viewport.fitBounds(new OpenSeadragon.Rect(1, 1, 1, 1), true);
             viewport.applyConstraints(true);
             var bounds = viewport.getBounds();
             Util.assertRectangleEquals(
                 assert,
-                new OpenSeadragon.Rect(1.0, 0.0, Math.sqrt(2), Math.sqrt(2), 45),
                 bounds,
+                new OpenSeadragon.Rect(1, 0, Math.sqrt(2), Math.sqrt(2), 45),
                 EPSILON,
                 "Viewport.applyConstraints with rotation should move viewport.");
 
@@ -570,15 +555,15 @@
             var viewport = viewer.viewport;
 
             viewport.setFlip(true);
-            viewport.setRotation(45, true);
+            viewport.setRotation(45);
 
             viewport.fitBounds(new OpenSeadragon.Rect(1, 1, 1, 1), true);
             viewport.applyConstraints(true);
             var bounds = viewport.getBounds();
             Util.assertRectangleEquals(
                 assert,
-                new OpenSeadragon.Rect(1.0, 0.0, Math.sqrt(2), Math.sqrt(2), 45),
                 bounds,
+                new OpenSeadragon.Rect(1, 0, Math.sqrt(2), Math.sqrt(2), 45),
                 EPSILON,
                 "Viewport.applyConstraints flipped and with rotation should move viewport.");
 
@@ -672,7 +657,7 @@
         var openHandler = function(event) {
             viewer.removeHandler('open', openHandler);
             var viewport = viewer.viewport;
-            viewport.setRotation(45, true);
+            viewport.setRotation(45);
 
             for(var i = 0; i < testRectsFitBounds.length; i++){
                 var rect = testRectsFitBounds[i];
@@ -1079,22 +1064,10 @@
             var viewport = viewer.viewport;
 
             assert.propEqual(viewport.getRotation, 0, "Original rotation should be 0 degrees");
-            viewport.setRotation(90, true);
+            viewport.setRotation(90);
             assert.propEqual(viewport.getRotation, 90, "Rotation should be 90 degrees");
-            viewport.setRotation(-75, true);
+            viewport.setRotation(-75);
             assert.propEqual(viewport.getRotation, -75, "Rotation should be -75 degrees");
-
-            viewport.setRotation(0, true);
-            assert.strictEqual(viewport.getRotation(true), 0, 'viewport has default current rotation');
-            assert.strictEqual(viewport.getRotation(false), 0, 'viewport has default target rotation');
-
-            viewport.setRotation(33);
-            assert.strictEqual(viewport.getRotation(true), 0, 'current rotation is not changed');
-            assert.strictEqual(viewport.getRotation(false), 33, 'target rotation is set correctly');
-
-            viewport.setRotation(200, true);
-            assert.strictEqual(viewport.getRotation(true), 200, 'current rotation is set correctly');
-            assert.strictEqual(viewport.getRotation(false), 200, 'target rotation is set correctly');
 
             done();
         };
@@ -1112,9 +1085,9 @@
             viewport.setFlip(true);
 
             assert.propEqual(viewport.getRotation, 0, "Original flipped rotation should be 0 degrees");
-            viewport.setRotation(90, true);
+            viewport.setRotation(90);
             assert.propEqual(viewport.getRotation, 90, "Flipped rotation should be 90 degrees");
-            viewport.setRotation(-75, true);
+            viewport.setRotation(-75);
             assert.propEqual(viewport.getRotation, -75, "Flipped rotation should be -75 degrees");
 
             done();
@@ -1131,9 +1104,9 @@
             var viewport = viewer.viewport;
 
             for(var i = 0; i < testPoints.length; i++){
-                var newSize = testPoints[i].times(viewer.source.dimensions.x);
-                viewport.resize(newSize);
-                assert.propEqual(viewport.getContainerSize(), newSize, "Viewport resized successfully.");
+                var new_size = testPoints[i].times(viewer.source.dimensions.x);
+                viewport.resize(new_size);
+                assert.propEqual(viewport.getContainerSize(), new_size, "Viewport resized successfully.");
             }
             done();
         };
@@ -1287,12 +1260,12 @@
         loopingTestHelper(assert, {
             testArray: testPoints,
             getOrig: function(el, viewport) {
-                var windowBoundary = Math.min(window.innerWidth, window.innerHeight);
-                return el.times(windowBoundary);
+                var window_boundary = Math.min(window.innerWidth, window.innerHeight);
+                return el.times(window_boundary);
             },
             getExpected: function(orig, viewport) {
-                var posPoint = OpenSeadragon.getElementOffset(viewer.element);
-                return orig.minus(posPoint).divide(viewport.getContainerSize().x * ZOOM_FACTOR).plus(VIEWER_PADDING);
+                var pos_point = OpenSeadragon.getElementOffset(viewer.element);
+                return orig.minus(pos_point).divide(viewport.getContainerSize().x * ZOOM_FACTOR).plus(VIEWER_PADDING);
             },
             method: 'windowToViewportCoordinates'
         });
@@ -1305,8 +1278,8 @@
                 return el.times(viewer.source.dimensions.x);
             },
             getExpected: function(orig, viewport) {
-                var posPoint = OpenSeadragon.getElementOffset(viewer.element);
-                return orig.plus(posPoint).minus(VIEWER_PADDING.times(viewport.getContainerSize().x * ZOOM_FACTOR));
+                var pos_point = OpenSeadragon.getElementOffset(viewer.element);
+                return orig.plus(pos_point).minus(VIEWER_PADDING.times(viewport.getContainerSize().x * ZOOM_FACTOR));
             },
             method: 'imageToWindowCoordinates'
         });
@@ -1316,12 +1289,12 @@
         loopingTestHelper(assert, {
             testArray: testPoints,
             getOrig: function(el, viewport) {
-                var windowBoundary = Math.min(window.innerWidth, window.innerHeight);
-                return el.times(windowBoundary);
+                var window_boundary = Math.min(window.innerWidth, window.innerHeight);
+                return el.times(window_boundary);
             },
             getExpected: function(orig, viewport) {
-                var posPoint = OpenSeadragon.getElementOffset(viewer.element);
-                return orig.minus(posPoint).divide(viewport.getContainerSize().x * ZOOM_FACTOR).plus(VIEWER_PADDING);
+                var pos_point = OpenSeadragon.getElementOffset(viewer.element);
+                return orig.minus(pos_point).divide(viewport.getContainerSize().x * ZOOM_FACTOR).plus(VIEWER_PADDING);
             },
             method: 'windowToViewportCoordinates'
         });
@@ -1334,8 +1307,8 @@
                 return el.times(viewer.source.dimensions.x);
             },
             getExpected: function(orig, viewport) {
-                var posPoint = OpenSeadragon.getElementOffset(viewer.element);
-                return orig.minus(VIEWER_PADDING).times(viewport.getContainerSize().x * ZOOM_FACTOR).plus(posPoint);
+                var pos_point = OpenSeadragon.getElementOffset(viewer.element);
+                return orig.minus(VIEWER_PADDING).times(viewport.getContainerSize().x * ZOOM_FACTOR).plus(pos_point);
             },
             method: 'viewportToWindowCoordinates'
         });

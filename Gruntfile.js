@@ -1,8 +1,6 @@
-/* eslint-disable no-redeclare */
 /* global module */
 
 module.exports = function(grunt) {
-    /* eslint-disable no-undef */
     var dateFormat = require('dateformat');
 
     // ----------
@@ -13,7 +11,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-contrib-connect");
     grunt.loadNpmTasks("grunt-contrib-watch");
     grunt.loadNpmTasks("grunt-contrib-clean");
-    grunt.loadNpmTasks("grunt-eslint");
+    // grunt.loadNpmTasks("grunt-eslint");
     grunt.loadNpmTasks("grunt-git-describe");
     grunt.loadNpmTasks('grunt-text-replace');
     grunt.loadNpmTasks('grunt-istanbul');
@@ -28,7 +26,6 @@ module.exports = function(grunt) {
         coverageDir = 'coverage/' + dateFormat(new Date(), 'yyyymmdd-HHMMss'),
         sources = [
             "src/openseadragon.js",
-            "src/matrix3.js",
             "src/fullscreen.js",
             "src/eventsource.js",
             "src/mousetracker.js",
@@ -58,14 +55,11 @@ module.exports = function(grunt) {
             "src/imageloader.js",
             "src/tile.js",
             "src/overlay.js",
-            "src/drawerbase.js",
-            "src/htmldrawer.js",
-            "src/canvasdrawer.js",
-            "src/webgldrawer.js",
+            "src/drawer.js",
             "src/viewport.js",
             "src/tiledimage.js",
             "src/tilecache.js",
-            "src/world.js",
+            "src/world.js"
         ];
 
     var banner = "//! <%= pkg.name %> <%= pkg.version %>\n" +
@@ -129,7 +123,6 @@ module.exports = function(grunt) {
                 banner: banner,
                 compress: {
                     sequences: false,
-                    /* eslint-disable camelcase */
                     join_vars: false
                 },
                 sourceMap: true,
@@ -165,11 +158,8 @@ module.exports = function(grunt) {
             normal: {
                 options: {
                     urls: [ "http://localhost:8000/test/test.html" ],
-                    timeout: 10000,
-                    puppeteer: {
-                        headless: 'new'
-                    }
-                },
+                    timeout: 10000
+                }
             },
             coverage: {
                 options: {
@@ -202,14 +192,14 @@ module.exports = function(grunt) {
             files: [ "Gruntfile.js", "src/*.js", "images/*" ],
             tasks: "watchTask"
         },
-        eslint: {
-            options: {
-                overrideConfigFile: '.eslintrc.json'
-            },
-            target: sources
-        },
+        // eslint: {
+        //     options: {
+        //         configFile: '.eslintrc.json'
+        //     },
+        //     target: sources
+        // },
         "git-describe": {
-            options: {
+            "options": {
                 failOnError: false
             },
             build: {}
@@ -314,7 +304,8 @@ module.exports = function(grunt) {
     // Build task.
     // Cleans out the build folder and builds the code and images into it, checking lint.
     grunt.registerTask("build", [
-        "clean:build", "git-describe", "eslint", "concat", "uglify",
+        "clean:build", "git-describe", "concat", "uglify",
+        // "clean:build", "git-describe", "eslint", "concat", "uglify",
         "replace:cleanPaths", "copy:build"
     ]);
 

@@ -19,12 +19,10 @@
             raiseEvent: function() {}
         };
         var fakeTiledImage0 = {
-            viewer: fakeViewer,
-            source: OpenSeadragon.TileSource.prototype
+            viewer: fakeViewer
         };
         var fakeTiledImage1 = {
-            viewer: fakeViewer,
-            source: OpenSeadragon.TileSource.prototype
+            viewer: fakeViewer
         };
 
         var fakeTile0 = {
@@ -76,8 +74,7 @@
             raiseEvent: function() {}
         };
         var fakeTiledImage0 = {
-            viewer: fakeViewer,
-            source: OpenSeadragon.TileSource.prototype
+            viewer: fakeViewer
         };
 
         var fakeTile0 = {
